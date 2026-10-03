@@ -17,6 +17,15 @@ export interface FirebaseConfig {
 
 const STORAGE_KEY = 'ignite_firebase_config';
 
+const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = {
+  apiKey: "AIzaSyBhEpQgAWyTd0Ke8rLygX4xZKfXUMza9_U",
+  authDomain: "tryout-tracker-450cc.firebaseapp.com",
+  projectId: "tryout-tracker-450cc",
+  storageBucket: "tryout-tracker-450cc.firebasestorage.app",
+  messagingSenderId: "859066108556",
+  appId: "1:859066108556:web:2b613913b0399ba83f49a9"
+};
+
 export function getStoredFirebaseConfig(): FirebaseConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -33,11 +42,11 @@ export function getStoredFirebaseConfig(): FirebaseConfig | null {
           appId: env.VITE_FIREBASE_APP_ID || ''
         };
       }
-      return null;
+      return DEFAULT_FIREBASE_CONFIG;
     }
     return JSON.parse(raw);
   } catch {
-    return null;
+    return DEFAULT_FIREBASE_CONFIG;
   }
 }
 
