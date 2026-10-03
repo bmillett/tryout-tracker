@@ -118,7 +118,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
           </button>
         </div>
 
-        <p className="text-[11px] text-slate-500">Default Coach PIN is <code className="text-amber-300">2026</code></p>
+        <p className="text-[11px] text-slate-500">Enter your 4-digit Coach PIN</p>
       </div>
     </div>
   );

@@ -19,7 +19,8 @@ import {
   FileSpreadsheet,
   Flame,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  KeyRound
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -58,6 +59,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [newSessionNum, setNewSessionNum] = useState(sessions.length + 1);
   const [rolloverSourceSessionId, setRolloverSourceSessionId] = useState<string>(currentSession.id);
   const [includeLocksOnly, setIncludeLocksOnly] = useState(false);
+
+  // Coach PIN State
+  const [customPin, setCustomPin] = useState(currentSession.admin_pin_hash || '2026');
+  const [pinSuccess, setPinSuccess] = useState('');
+  const [pinError, setPinError] = useState('');
 
   // Settings (Firebase)
   const existingConfig = getStoredFirebaseConfig();
@@ -199,7 +205,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       target_roster_size: currentSession.target_roster_size || 22,
       date: new Date().toISOString().split('T')[0],
       status: 'active',
-      admin_pin_hash: '2026'
+      admin_pin_hash: currentSession.admin_pin_hash || '2026'
     };
 
     await db.sessions.add(newSession);
@@ -358,7 +364,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           }`}
         >
           <Flame className="w-4 h-4 text-amber-500" />
-          <span>Firebase Cloud Sync</span>
+          <span>Cloud & Security</span>
         </button>
       </div>
 
@@ -728,13 +734,78 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
-      {/* TAB 4: FIREBASE SYNC SETTINGS */}
+      {/* TAB 4: SECURITY & CLOUD SETTINGS */}
       {activeTab === 'settings' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg max-w-xl space-y-4">
-          <div className="flex items-center gap-2 text-white font-semibold text-sm">
-            <Flame className="w-5 h-5 text-amber-500" />
-            <span>Firebase Firestore Cloud Configuration</span>
+        <div className="space-y-6 max-w-xl">
+          {/* Change Coach PIN Section */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div className="flex items-center gap-2 text-white font-semibold text-sm">
+              <KeyRound className="w-5 h-5 text-amber-400" />
+              <span>Change Coach PIN</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Set a 4-to-6 digit PIN required to unlock Coach Settings, Roster Board, and Leaderboards.
+            </p>
+
+            {pinSuccess && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{pinSuccess}</span>
+              </div>
+            )}
+            {pinError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{pinError}</span>
+              </div>
+            )}
+
+            <div className="flex gap-3 items-center">
+              <div className="w-48">
+                <label className="block text-xs font-semibold text-slate-300 mb-1">New PIN</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={customPin}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setCustomPin(val);
+                  }}
+                  placeholder="e.g. 2026"
+                  className="w-full bg-slate-800 text-white font-mono text-center tracking-widest text-lg font-bold border border-slate-700 rounded-xl px-3 py-2 outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="pt-5">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (customPin.length < 4) {
+                      setPinError('PIN must be at least 4 digits.');
+                      return;
+                    }
+                    setPinError('');
+                    await db.sessions.update(currentSession.id, { admin_pin_hash: customPin });
+                    const updated = { ...currentSession, admin_pin_hash: customPin };
+                    onSessionChange(updated);
+                    onRefresh();
+                    setPinSuccess(`Coach PIN updated to ${customPin}!`);
+                    setTimeout(() => setPinSuccess(''), 4000);
+                  }}
+                  className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition"
+                >
+                  Update PIN
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* Firebase Settings */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div className="flex items-center gap-2 text-white font-semibold text-sm">
+              <Flame className="w-5 h-5 text-amber-500" />
+              <span>Firebase Firestore Cloud Configuration</span>
+            </div>
           <p className="text-xs text-slate-400 leading-relaxed">
             Connect a free Google Firebase project to stream evaluations live across all coaches&rsquo; phones and keep data permanently backed up.
           </p>
@@ -821,6 +892,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <li>Under Project Settings $\to$ <strong>Add Web App</strong>, copy your <code>projectId</code>, <code>apiKey</code>, and <code>appId</code>.</li>
             </ol>
           </div>
+        </div>
         </div>
       )}
     </div>
