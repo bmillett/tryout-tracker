@@ -134,6 +134,22 @@ export class SyncService {
       });
       this.unsubscribers.push(unsubPlayers);
 
+      // Listen to sessions (active/finalized status changes by coaches)
+      const sessionsCol = collection(firestore, 'sessions');
+      const unsubSessions = onSnapshot(sessionsCol, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const data = change.doc.data() as any;
+            if (data && data.id) {
+              await db.sessions.put(data);
+            }
+          }
+        });
+      }, (err) => {
+        console.warn('Firestore sessions subscription notice:', err.message);
+      });
+      this.unsubscribers.push(unsubSessions);
+
     } catch (e) {
       console.warn('Failed to start Firestore listeners:', e);
     }
@@ -210,6 +226,19 @@ export class SyncService {
     this.flushQueue();
   }
 
+  // Sync session status updates (finalize / unlock) to Firebase
+  public static async syncSession(session: any) {
+    await db.sessions.put(session);
+    await db.syncQueue.put({
+      id: `queue_session_${session.id}`,
+      type: 'session_update' as any,
+      payload: session,
+      timestamp: Date.now()
+    });
+    this.notify();
+    this.flushQueue();
+  }
+
   // Flush offline queue to Firebase Firestore
   public static async flushQueue() {
     if (this.isSyncing || !this.isOnline) return;
@@ -238,6 +267,10 @@ export class SyncService {
             const playerItem = item.payload as Player;
             const playerDocRef = doc(firestore, 'players', playerItem.id);
             await setDoc(playerDocRef, playerItem, { merge: true });
+          } else if ((item.type as string) === 'session_update') {
+            const sessionItem = item.payload;
+            const sessionDocRef = doc(firestore, 'sessions', sessionItem.id);
+            await setDoc(sessionDocRef, sessionItem, { merge: true });
           }
           await db.syncQueue.delete(item.id);
         } catch (e) {

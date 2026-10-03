@@ -294,6 +294,7 @@ export const App: React.FC = () => {
             criteria={criteria}
             evaluations={evaluations}
             notes={notes}
+            onSessionChange={(s) => setActiveSession(s)}
             onRefresh={() => {}}
           />
         )}

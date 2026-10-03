@@ -19,6 +19,7 @@ interface LeaderboardProps {
   criteria: Criterion[];
   evaluations: Evaluation[];
   notes: PlayerNote[];
+  onSessionChange: (session: TryoutSession) => void;
   onRefresh: () => void;
 }
 
@@ -28,6 +29,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   criteria,
   evaluations,
   notes,
+  onSessionChange,
   onRefresh
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,13 +178,47 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             </h2>
           </div>
 
-          <button
-            onClick={handleExportCsv}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-2xl text-xs font-bold shadow-md transition"
-          >
-            <Download className="w-4 h-4 text-emerald-400" />
-            <span>Export CSV Matrix</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* 1-Click Freeze / Finalize Session for all evaluators */}
+            <button
+              onClick={async () => {
+                const nextStatus = session.status === 'active' ? 'finalized' : 'active';
+                if (nextStatus === 'finalized') {
+                  if (!confirm('Freeze this tryout session? This will immediately lock all input from non-coaches/evaluators on their devices.')) return;
+                }
+                await db.sessions.update(session.id, { status: nextStatus });
+                const updated = { ...session, status: nextStatus as any };
+                await SyncService.syncSession(updated);
+                onSessionChange(updated);
+                onRefresh();
+              }}
+              className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition border ${
+                session.status === 'active'
+                  ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40'
+                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40'
+              }`}
+            >
+              {session.status === 'active' ? (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Freeze Evaluator Inputs</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Re-Open Inputs</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleExportCsv}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-2xl text-xs font-bold shadow-md transition"
+            >
+              <Download className="w-4 h-4 text-emerald-400" />
+              <span>Export CSV Matrix</span>
+            </button>
+          </div>
         </div>
 
         {/* Progress Bar of Locked Spots */}

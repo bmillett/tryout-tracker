@@ -188,6 +188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const nextStatus = currentSession.status === 'active' ? 'finalized' : 'active';
     await db.sessions.update(currentSession.id, { status: nextStatus });
     const updated = { ...currentSession, status: nextStatus as any };
+    await SyncService.syncSession(updated);
     onSessionChange(updated);
     onRefresh();
   };
