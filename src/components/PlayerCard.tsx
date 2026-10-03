@@ -64,10 +64,18 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         </div>
       </div>
 
-      {/* Player Name */}
+      {/* Player Name (First Name + Last Initial for compact sideline grid) */}
       <div className="w-full">
         <h4 className="font-bold text-white text-base tracking-tight truncate group-hover:text-amber-400 transition">
-          {player.name}
+          {(() => {
+            const parts = player.name.trim().split(/\s+/);
+            if (parts.length > 1) {
+              const firstName = parts[0];
+              const lastInitial = parts[parts.length - 1][0].toUpperCase();
+              return `${firstName} ${lastInitial}.`;
+            }
+            return player.name;
+          })()}
         </h4>
         <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
           <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: pinney.hex }} />
