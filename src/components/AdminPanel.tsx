@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { db } from '../services/db';
+import { SyncService } from '../services/sync';
+import { getStoredFirebaseConfig, reinitFirebase, type FirebaseConfig } from '../services/firebase';
 import type { Player, Criterion, TryoutSession, PlayerStatus } from '../types';
 import { PINNEY_COLORS, DEFAULT_CRITERIA_TEMPLATES } from '../data/defaultData';
-import { 
-  Users, 
-  Upload, 
-  Plus, 
-  Trash2, 
-  Sliders, 
-  Calendar, 
-  CheckCircle2, 
-  ArrowRightLeft, 
-  Lock, 
-  Unlock, 
+import {
+  Users,
+  Upload,
+  Plus,
+  Trash2,
+  Sliders,
+  Calendar,
+  CheckCircle2,
+  ArrowRightLeft,
+  Lock,
+  Unlock,
   FileSpreadsheet,
-  Settings,
-  Sparkles
+  Flame,
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -56,9 +59,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [rolloverSourceSessionId, setRolloverSourceSessionId] = useState<string>(currentSession.id);
   const [includeLocksOnly, setIncludeLocksOnly] = useState(false);
 
-  // Settings
-  const [pbUrl, setPbUrl] = useState(localStorage.getItem('ignite_pb_url') || 'https://tryout-tracker.pockethost.io');
+  // Settings (Firebase)
+  const existingConfig = getStoredFirebaseConfig();
+  const [firebaseApiKey, setFirebaseApiKey] = useState(existingConfig?.apiKey || '');
+  const [firebaseProjectId, setFirebaseProjectId] = useState(existingConfig?.projectId || '');
+  const [firebaseAppId, setFirebaseAppId] = useState(existingConfig?.appId || '');
   const [saveSuccess, setSaveSuccess] = useState('');
+  const [configError, setConfigError] = useState('');
 
   // CSV Import
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +132,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Update Player Status or Lock
   const handleUpdatePlayer = async (playerId: string, updates: Partial<Player>) => {
     await db.players.update(playerId, updates);
+    const updated = await db.players.get(playerId);
+    if (updated) {
+      await SyncService.syncPlayer(updated);
+    }
     onRefresh();
   };
 
@@ -346,8 +357,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               : 'text-slate-400 hover:text-white hover:bg-slate-850'
           }`}
         >
-          <Settings className="w-4 h-4" />
-          <span>PocketHost Sync</span>
+          <Flame className="w-4 h-4 text-amber-500" />
+          <span>Firebase Cloud Sync</span>
         </button>
       </div>
 
@@ -717,38 +728,99 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
-      {/* TAB 4: POCKETHOST SYNC SETTINGS */}
+      {/* TAB 4: FIREBASE SYNC SETTINGS */}
       {activeTab === 'settings' && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg max-w-xl space-y-4">
           <div className="flex items-center gap-2 text-white font-semibold text-sm">
-            <Settings className="w-4 h-4 text-amber-400" />
-            <span>PocketBase / PocketHost Configuration</span>
+            <Flame className="w-5 h-5 text-amber-500" />
+            <span>Firebase Firestore Cloud Configuration</span>
           </div>
-          <p className="text-xs text-slate-400">
-            Configure your PocketHost.io backend instance for real-time evaluator syncing across phones.
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Connect a free Google Firebase project to stream evaluations live across all coaches&rsquo; phones and keep data permanently backed up.
           </p>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">PocketBase Backend URL</label>
-            <input
-              type="text"
-              value={pbUrl}
-              onChange={(e) => setPbUrl(e.target.value)}
-              placeholder="https://your-app.pockethost.io"
-              className="w-full bg-slate-800 text-white text-xs border border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-amber-400"
-            />
+          {configError && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{configError}</span>
+            </div>
+          )}
+
+          <div className="space-y-3 pt-1">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Project ID</label>
+              <input
+                type="text"
+                value={firebaseProjectId}
+                onChange={(e) => setFirebaseProjectId(e.target.value)}
+                placeholder="e.g. ignite-tryout-tracker"
+                className="w-full bg-slate-800 text-white text-xs border border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">API Key</label>
+              <input
+                type="text"
+                value={firebaseApiKey}
+                onChange={(e) => setFirebaseApiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full bg-slate-800 text-white text-xs border border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">App ID</label>
+              <input
+                type="text"
+                value={firebaseAppId}
+                onChange={(e) => setFirebaseAppId(e.target.value)}
+                placeholder="1:1234567890:web:abcdef..."
+                className="w-full bg-slate-800 text-white text-xs border border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-amber-400"
+              />
+            </div>
           </div>
 
-          <button
-            onClick={() => {
-              localStorage.setItem('ignite_pb_url', pbUrl.trim());
-              setSaveSuccess('Backend URL updated successfully!');
-              setTimeout(() => setSaveSuccess(''), 3000);
-            }}
-            className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition"
-          >
-            Save URL
-          </button>
+          <div className="pt-2 flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (!firebaseProjectId.trim() || !firebaseApiKey.trim()) {
+                  setConfigError('Please provide at least a Project ID and API Key.');
+                  return;
+                }
+                setConfigError('');
+
+                const newConfig: FirebaseConfig = {
+                  apiKey: firebaseApiKey.trim(),
+                  projectId: firebaseProjectId.trim(),
+                  authDomain: `${firebaseProjectId.trim()}.firebaseapp.com`,
+                  appId: firebaseAppId.trim() || '1:default:web:app'
+                };
+
+                const ok = reinitFirebase(newConfig);
+                if (ok) {
+                  SyncService.startFirestoreListeners();
+                  SyncService.flushQueue();
+                  setSaveSuccess('Firebase connected & syncing in real time!');
+                  setTimeout(() => setSaveSuccess(''), 4000);
+                } else {
+                  setConfigError('Failed to initialize Firebase with provided credentials.');
+                }
+              }}
+              className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition"
+            >
+              Connect & Start Realtime Sync
+            </button>
+          </div>
+
+          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
+            <div className="font-semibold text-slate-300">How to get these keys for free:</div>
+            <ol className="list-decimal list-inside space-y-0.5 text-slate-400">
+              <li>Open <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-amber-400 underline">console.firebase.google.com</a> & create a free project.</li>
+              <li>Click <strong>Firestore Database</strong> $\to$ <strong>Create Database</strong> (start in test mode).</li>
+              <li>Under Project Settings $\to$ <strong>Add Web App</strong>, copy your <code>projectId</code>, <code>apiKey</code>, and <code>appId</code>.</li>
+            </ol>
+          </div>
         </div>
       )}
     </div>

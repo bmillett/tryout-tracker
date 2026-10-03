@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '../types';
 import { PINNEY_COLORS } from '../data/defaultData';
 import { db } from '../services/db';
-import { 
-  Trophy, 
-  Lock, 
-  Unlock, 
-  Download, 
-  Search, 
-  ChevronRight, 
+import { SyncService } from '../services/sync';
+import {
+  Trophy,
+  Lock,
+  Unlock,
+  Download,
+  Search,
+  ChevronRight,
   ArrowUpDown
 } from 'lucide-react';
 
@@ -110,7 +111,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   });
 
   const handleToggleLock = async (player: Player) => {
-    await db.players.update(player.id, { is_locked: !player.is_locked });
+    const updated = { ...player, is_locked: !player.is_locked };
+    await db.players.update(player.id, { is_locked: updated.is_locked });
+    await SyncService.syncPlayer(updated);
     onRefresh();
   };
 

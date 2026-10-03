@@ -12,6 +12,7 @@
     "clsx": "^2.1.1",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
+    "firebase": "^12.19.0",
     "lucide-react": "^1.16.0",
     "papaparse": "^5.5.3",
     "pocketbase": "^0.25.2",

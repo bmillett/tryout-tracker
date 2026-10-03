@@ -1,6 +1,6 @@
 # Ignite Juniors Tryout Tracker
 
-A lightweight, mobile-first Progressive Web App (PWA) built with **React (Vite) + Tailwind CSS + PocketBase / PocketHost.io** for real-time sideline evaluations during ultimate frisbee tryouts.
+A lightweight, mobile-first Progressive Web App (PWA) built with **React (Vite) + Tailwind CSS + Firebase Firestore** for real-time sideline evaluations during ultimate frisbee tryouts.
 
 ---
 
@@ -21,7 +21,7 @@ A lightweight, mobile-first Progressive Web App (PWA) built with **React (Vite) 
   - Finalize/Lock button to freeze evaluator inputs.
 - **Offline Resilience & Instant Writes**:
   - Instant optimistic writes to local IndexedDB (`Dexie.js`).
-  - Automatic background sync to PocketBase whenever cellular data is available.
+  - Native Firestore multi-tab offline caching (`persistentLocalCache`) + automatic background sync.
 
 ---
 
@@ -39,14 +39,13 @@ Open your browser to `http://localhost:5173`.
 
 ---
 
-## PocketHost.io Setup (Backend Hosting)
+## Firebase Firestore Setup (Free 24/7 Cloud Backend)
 
-1. Go to [PocketHost.io](https://pockethost.io) and create a free account.
-2. Click **Create Instance** and pick a name (e.g. `ignite-tryouts`).
-3. Click into your instance **Admin UI** (e.g. `https://ignite-tryouts.pockethost.io/_/`).
-4. Set your PocketBase Admin Email and Password.
-5. In the left navigation, go to **Settings** $\to$ **Import collections** and upload [`pocketbase-schema.json`](pocketbase-schema.json).
-6. In the Tryout Tracker Web App, click the ⚙️ **Settings** tab in Coach Admin and set your backend URL to `https://ignite-tryouts.pockethost.io`.
+1. Open [console.firebase.google.com](https://console.firebase.google.com) and click **Add Project** (e.g. `ignite-tryouts`).
+2. Go to **Build** $\to$ **Firestore Database** $\to$ **Create Database** (start in Test mode or configure open collection rules for `sessions`, `players`, `criteria`, `evaluations`, `player_notes`).
+3. In Project Settings (⚙️ icon) $\to$ **General** $\to$ **Your apps**, click the Web icon (`</>`) to register a Web App.
+4. In the Tryout Tracker Web App, click the ⚙️ **Settings** button (enter Coach PIN `2026`), go to **Firebase Cloud Sync**, and paste your `projectId`, `apiKey`, and `appId`.
+5. Click **Connect & Start Realtime Sync**.
 
 ---
 

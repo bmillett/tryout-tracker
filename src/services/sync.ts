@@ -1,25 +1,23 @@
-import PocketBase from 'pocketbase';
 import { db } from './db';
+import { getFirestoreDB, getStoredFirebaseConfig } from './firebase';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  onSnapshot, 
+  type Unsubscribe 
+} from 'firebase/firestore';
 import type { Evaluation, Criterion, Player, PlayerNote } from '../types';
 import { DEFAULT_CRITERIA_TEMPLATES, INITIAL_DEFAULT_SESSION, INITIAL_SAMPLE_PLAYERS } from '../data/defaultData';
-
-const DEFAULT_POCKETBASE_URL = localStorage.getItem('ignite_pb_url') || 'https://tryout-tracker.pockethost.io';
-
-export const pb = new PocketBase(DEFAULT_POCKETBASE_URL);
-pb.autoCancellation(false);
 
 export class SyncService {
   private static isSyncing = false;
   private static isOnline = navigator.onLine;
   private static listeners: ((online: boolean, syncing: boolean, pendingCount: number) => void)[] = [];
+  private static unsubscribers: Unsubscribe[] = [];
 
-  public static getPbUrl(): string {
-    return localStorage.getItem('ignite_pb_url') || DEFAULT_POCKETBASE_URL;
-  }
-
-  public static setPbUrl(url: string) {
-    localStorage.setItem('ignite_pb_url', url.trim());
-    pb.baseUrl = url.trim();
+  public static isFirebaseConfigured(): boolean {
+    return getStoredFirebaseConfig() !== null;
   }
 
   public static subscribeStatus(listener: (online: boolean, syncing: boolean, pendingCount: number) => void) {
@@ -36,7 +34,7 @@ export class SyncService {
   }
 
   public static async initDB() {
-    // Check if initial session exists
+    // Check if initial session exists locally
     const sessionCount = await db.sessions.count();
     if (sessionCount === 0) {
       await db.sessions.add(INITIAL_DEFAULT_SESSION);
@@ -69,13 +67,79 @@ export class SyncService {
       this.notify();
     });
 
+    // Start Realtime Firestore listeners if configured
+    this.startFirestoreListeners();
+
     // Try background sync if online
     if (this.isOnline) {
       this.flushQueue();
     }
   }
 
-  // Save evaluation optimistically to local DB and enqueue for PocketBase sync
+  // Realtime listeners to pull evaluations and notes from other coaches
+  public static startFirestoreListeners() {
+    // Clear previous
+    this.unsubscribers.forEach(u => u());
+    this.unsubscribers = [];
+
+    const firestore = getFirestoreDB();
+    if (!firestore) return;
+
+    try {
+      // Listen to evaluations
+      const evalsCol = collection(firestore, 'evaluations');
+      const unsubEvals = onSnapshot(evalsCol, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const data = change.doc.data() as Evaluation;
+            if (data && data.id) {
+              await db.evaluations.put({ ...data, is_synced: true });
+            }
+          }
+        });
+      }, (err) => {
+        console.warn('Firestore eval subscription notice:', err.message);
+      });
+      this.unsubscribers.push(unsubEvals);
+
+      // Listen to notes
+      const notesCol = collection(firestore, 'player_notes');
+      const unsubNotes = onSnapshot(notesCol, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const data = change.doc.data() as PlayerNote;
+            if (data && data.id) {
+              await db.notes.put({ ...data, is_synced: true });
+            }
+          }
+        });
+      }, (err) => {
+        console.warn('Firestore notes subscription notice:', err.message);
+      });
+      this.unsubscribers.push(unsubNotes);
+
+      // Listen to players (locks, colors, status)
+      const playersCol = collection(firestore, 'players');
+      const unsubPlayers = onSnapshot(playersCol, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const data = change.doc.data() as Player;
+            if (data && data.id) {
+              await db.players.put(data);
+            }
+          }
+        });
+      }, (err) => {
+        console.warn('Firestore players subscription notice:', err.message);
+      });
+      this.unsubscribers.push(unsubPlayers);
+
+    } catch (e) {
+      console.warn('Failed to start Firestore listeners:', e);
+    }
+  }
+
+  // Save evaluation optimistically to local DB and enqueue for Firestore sync
   public static async saveEvaluation(evaluation: Omit<Evaluation, 'id' | 'updated_at'>) {
     const existing = await db.evaluations
       .where({
@@ -96,7 +160,7 @@ export class SyncService {
 
     await db.evaluations.put(fullEval);
 
-    // Queue for PocketBase
+    // Queue for Firestore
     await db.syncQueue.put({
       id: `queue_${id}`,
       type: 'evaluation',
@@ -133,9 +197,26 @@ export class SyncService {
     return fullNote;
   }
 
-  // Flush offline queue to PocketBase
+  // Sync player updates (locks, statuses) to Firebase
+  public static async syncPlayer(player: Player) {
+    await db.players.put(player);
+    await db.syncQueue.put({
+      id: `queue_player_${player.id}`,
+      type: 'player_update',
+      payload: player,
+      timestamp: Date.now()
+    });
+    this.notify();
+    this.flushQueue();
+  }
+
+  // Flush offline queue to Firebase Firestore
   public static async flushQueue() {
     if (this.isSyncing || !this.isOnline) return;
+
+    const firestore = getFirestoreDB();
+    if (!firestore) return;
+
     this.isSyncing = true;
     this.notify();
 
@@ -145,42 +226,22 @@ export class SyncService {
         try {
           if (item.type === 'evaluation') {
             const evalItem = item.payload as Evaluation;
-            try {
-              // PocketBase upsert
-              await pb.collection('evaluations').create({
-                session_id: evalItem.session_id,
-                player_id: evalItem.player_id,
-                criterion_id: evalItem.criterion_id,
-                evaluator_name: evalItem.evaluator_name,
-                score: evalItem.score,
-                client_id: evalItem.id
-              });
-            } catch (createErr: any) {
-              // If already created, update it
-              if (createErr.status === 400 || createErr.status === 409) {
-                // Ignore or attempt update
-              }
-            }
+            const evalDocRef = doc(firestore, 'evaluations', evalItem.id);
+            await setDoc(evalDocRef, evalItem, { merge: true });
             await db.evaluations.update(evalItem.id, { is_synced: true });
           } else if (item.type === 'note') {
             const noteItem = item.payload as PlayerNote;
-            try {
-              await pb.collection('player_notes').create({
-                session_id: noteItem.session_id,
-                player_id: noteItem.player_id,
-                evaluator_name: noteItem.evaluator_name,
-                preset_tag: noteItem.preset_tag,
-                custom_text: noteItem.custom_text,
-                client_id: noteItem.id
-              });
-            } catch {
-              // ignore
-            }
+            const noteDocRef = doc(firestore, 'player_notes', noteItem.id);
+            await setDoc(noteDocRef, noteItem, { merge: true });
             await db.notes.update(noteItem.id, { is_synced: true });
+          } else if (item.type === 'player_update' || item.type === 'player_lock') {
+            const playerItem = item.payload as Player;
+            const playerDocRef = doc(firestore, 'players', playerItem.id);
+            await setDoc(playerDocRef, playerItem, { merge: true });
           }
           await db.syncQueue.delete(item.id);
         } catch (e) {
-          // If network error, stop flushing until connection restores
+          // If network / quota issue, stop loop until next trigger
           break;
         }
       }

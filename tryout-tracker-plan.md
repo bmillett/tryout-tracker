@@ -1,5 +1,5 @@
 # Tryout Tracker Plan (Ignite Juniors Ultimate Frisbee)
-*(React + Vite PWA + PocketBase / PocketHost.io)*
+*(React + Vite PWA + Firebase Firestore Cloud Sync)*
 
 ## Top-Level Overview
 A lightweight, mobile-first Progressive Web App (PWA) tailored for **Ignite Juniors Ultimate Frisbee** tryouts across 3 sessions (Session 1: ~40 max players $\to$ progressive cuts down to a target 22-player roster). Coaches and sideline evaluators can rapidly grade players in real time across ~16 customizable criteria with offline caching, high-contrast pinney color cards, drill group filtering, exemplar player anchors, preset quick tags, and strict role separation:
@@ -8,8 +8,8 @@ A lightweight, mobile-first Progressive Web App (PWA) tailored for **Ignite Juni
 
 ### Tech Stack & Architecture
 - **Frontend**: React (Vite) + Tailwind CSS + Lucide Icons + PWA (`vite-plugin-pwa` with offline service worker).
-- **Client Cache / Offline Queue**: IndexedDB (Dexie.js / Zustand Persist) for instant sub-10ms UI taps and background sync resilience on field cellular connections.
-- **Backend / Realtime**: PocketBase hosted on PocketHost.io (or any PocketBase instance) providing collection APIs and realtime SSE subscriptions.
+- **Client Cache / Offline Queue**: IndexedDB (Dexie.js) for instant sub-10ms UI taps + Firestore `persistentLocalCache` multi-tab manager.
+- **Backend / Realtime**: Firebase Firestore (Google Cloud free tier) with real-time `onSnapshot` subscriptions and offline queue sync.
 - **Access Model**: Evaluator name entry on load; 4-digit PIN for coach admin controls, roster cuts/rollover, Roster Board, and aggregate leaderboards.
 
 ---
