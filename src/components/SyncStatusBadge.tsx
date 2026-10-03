@@ -6,6 +6,7 @@ export const SyncStatusBadge: React.FC = () => {
   const [online, setOnline] = useState(navigator.onLine);
   const [syncing, setSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const isCloudActive = SyncService.isFirebaseConfigured();
 
   useEffect(() => {
     const unsub = SyncService.subscribeStatus((isOnline, isSync, count) => {
@@ -21,12 +22,12 @@ export const SyncStatusBadge: React.FC = () => {
       {online ? (
         <span className="flex items-center gap-1 text-emerald-400">
           <Wifi className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Online</span>
+          <span className="hidden sm:inline">{isCloudActive ? 'Cloud Live' : 'Online'}</span>
         </span>
       ) : (
         <span className="flex items-center gap-1 text-amber-400">
           <WifiOff className="w-3.5 h-3.5" />
-          <span>Offline</span>
+          <span>Offline (Saving locally)</span>
         </span>
       )}
 

@@ -54,6 +54,8 @@ export function saveStoredFirebaseConfig(config: FirebaseConfig) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 }
 
+import { getFirestore } from 'firebase/firestore';
+
 let appInstance: FirebaseApp | null = null;
 let firestoreInstance: Firestore | null = null;
 
@@ -72,12 +74,17 @@ export function getFirestoreDB(): Firestore | null {
       appInstance = getApps()[0];
     }
 
-    // Initialize Firestore with robust multi-tab persistent offline cache
-    firestoreInstance = initializeFirestore(appInstance, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    });
+    try {
+      // Initialize Firestore with robust multi-tab persistent offline cache
+      firestoreInstance = initializeFirestore(appInstance, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch {
+      // If already initialized, retrieve existing Firestore instance
+      firestoreInstance = getFirestore(appInstance);
+    }
 
     return firestoreInstance;
   } catch (err) {
@@ -89,8 +96,6 @@ export function getFirestoreDB(): Firestore | null {
 export function reinitFirebase(config: FirebaseConfig): boolean {
   try {
     saveStoredFirebaseConfig(config);
-    firestoreInstance = null;
-    appInstance = null;
     return getFirestoreDB() !== null;
   } catch {
     return false;
