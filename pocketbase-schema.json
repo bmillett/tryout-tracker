@@ -1,0 +1,307 @@
+[
+  {
+    "id": "sessions_collection",
+    "name": "sessions",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "s_name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": 255
+        }
+      },
+      {
+        "id": "s_num",
+        "name": "session_number",
+        "type": "number",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "s_target",
+        "name": "target_roster_size",
+        "type": "number",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "s_date",
+        "name": "date",
+        "type": "text",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "s_status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": ["active", "finalized"]
+        }
+      },
+      {
+        "id": "s_pin",
+        "name": "admin_pin_hash",
+        "type": "text",
+        "system": false,
+        "required": false
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": ""
+  },
+  {
+    "id": "criteria_collection",
+    "name": "criteria",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "c_session",
+        "name": "session_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "c_name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "c_cat",
+        "name": "category",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": ["Offense", "Defense", "Athleticism & Intangibles"]
+        }
+      },
+      {
+        "id": "c_desc",
+        "name": "description",
+        "type": "text",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "c_exemplar",
+        "name": "exemplar_player_name",
+        "type": "text",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "c_sort",
+        "name": "sort_order",
+        "type": "number",
+        "system": false,
+        "required": false
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": ""
+  },
+  {
+    "id": "players_collection",
+    "name": "players",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "p_session",
+        "name": "session_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "p_name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "p_num",
+        "name": "pinney_number",
+        "type": "number",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "p_color",
+        "name": "pinney_color",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "p_group",
+        "name": "group_name",
+        "type": "text",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "p_lock",
+        "name": "is_locked",
+        "type": "bool",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "p_status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": ["active", "injured", "absent", "no_need_to_watch", "cut_moved_down"]
+        }
+      },
+      {
+        "id": "p_notes",
+        "name": "notes",
+        "type": "text",
+        "system": false,
+        "required": false
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": ""
+  },
+  {
+    "id": "evaluations_collection",
+    "name": "evaluations",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "e_session",
+        "name": "session_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "e_player",
+        "name": "player_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "e_crit",
+        "name": "criterion_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "e_evaluator",
+        "name": "evaluator_name",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "e_score",
+        "name": "score",
+        "type": "number",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "e_client_id",
+        "name": "client_id",
+        "type": "text",
+        "system": false,
+        "required": false
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": ""
+  },
+  {
+    "id": "player_notes_collection",
+    "name": "player_notes",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "pn_session",
+        "name": "session_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "pn_player",
+        "name": "player_id",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "pn_evaluator",
+        "name": "evaluator_name",
+        "type": "text",
+        "system": false,
+        "required": true
+      },
+      {
+        "id": "pn_preset",
+        "name": "preset_tag",
+        "type": "text",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "pn_custom",
+        "name": "custom_text",
+        "type": "text",
+        "system": false,
+        "required": false
+      },
+      {
+        "id": "pn_client_id",
+        "name": "client_id",
+        "type": "text",
+        "system": false,
+        "required": false
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": ""
+  }
+]
