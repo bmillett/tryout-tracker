@@ -160,7 +160,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   return (
     <div className="space-y-6 pb-20">
       {/* 1. COACH-ONLY LIVE ROSTER BOARD (TARGET 22 COUNTER) */}
-      <div className="bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-900 border border-amber-500/30 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-amber-500/10 via-white dark:via-slate-900 to-white dark:to-slate-900 border border-amber-500/30 rounded-3xl p-5 shadow-lg relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -168,11 +168,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <Trophy className="w-3.5 h-3.5" />
                 <span>Coach Roster Board</span>
               </span>
-              <span className="text-xs text-slate-400">Target Roster: <strong>{targetSpots}</strong> players</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Target Roster: <strong>{targetSpots}</strong> players</span>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <span>{lockedCount} of {targetSpots} Spots Locked</span>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-amber-300 border border-slate-700 font-semibold">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-300 border border-slate-200 dark:border-slate-700 font-semibold">
                 {openSpots} Open Spot{openSpots !== 1 ? 's' : ''} Remaining
               </span>
             </h2>
@@ -192,20 +192,20 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 onSessionChange(updated);
                 onRefresh();
               }}
-              className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition border ${
+              className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm transition border ${
                 session.status === 'active'
-                  ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40'
-                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40'
+                  ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 border-rose-500/40'
+                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-300 border-emerald-500/40'
               }`}
             >
               {session.status === 'active' ? (
                 <>
-                  <Lock className="w-3.5 h-3.5 text-rose-400" />
+                  <Lock className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                   <span>Freeze Evaluator Inputs</span>
                 </>
               ) : (
                 <>
-                  <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                  <Unlock className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                   <span>Re-Open Inputs</span>
                 </>
               )}
@@ -213,16 +213,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
             <button
               onClick={handleExportCsv}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-2xl text-xs font-bold shadow-md transition"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold shadow-sm transition"
             >
-              <Download className="w-4 h-4 text-emerald-400" />
+              <Download className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
               <span>Export CSV Matrix</span>
             </button>
           </div>
         </div>
 
         {/* Progress Bar of Locked Spots */}
-        <div className="w-full h-3 bg-slate-800 rounded-full mt-4 overflow-hidden border border-slate-700/60 p-0.5">
+        <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full mt-4 overflow-hidden border border-slate-300 dark:border-slate-700/60 p-0.5">
           <div
             className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(100, (lockedCount / targetSpots) * 100)}%` }}
@@ -231,7 +231,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       </div>
 
       {/* Filters & Sorting Controls */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
           {/* Search */}
           <div className="relative w-full sm:w-72">
@@ -241,7 +241,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               placeholder="Search by name or jersey #..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800 text-white text-xs border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 outline-none focus:border-amber-400"
+              className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -254,7 +254,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                   selectedGroup === grp
                     ? 'bg-amber-400 text-slate-950 font-bold'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                 }`}
               >
                 {grp}
@@ -264,8 +264,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         </div>
 
         {/* Sort by Tabs */}
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80 overflow-x-auto">
-          <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/80 overflow-x-auto">
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1 shrink-0">
             <ArrowUpDown className="w-3 h-3" /> Sort by:
           </span>
           {[
@@ -280,8 +280,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               onClick={() => setSortBy(s.id as any)}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition shrink-0 ${
                 sortBy === s.id
-                  ? 'bg-slate-800 text-amber-300 border border-slate-700'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-300 border border-slate-200 dark:border-slate-700'
+                  : 'text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
               {s.label}
@@ -291,10 +291,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       </div>
 
       {/* Leaderboard Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-800/70 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+            <thead className="bg-slate-50 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="p-3.5 text-center w-12">Rank</th>
                 <th className="p-3.5">Player</th>
@@ -307,7 +307,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <th className="p-3.5 text-right">Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 text-slate-200">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
               {filtered.map(({ player, overallAvg, offAvg, defAvg, evalCount, evaluatorCount }, idx) => {
                 const pinney = PINNEY_COLORS.find(c => c.name.toLowerCase() === player.pinney_color.toLowerCase()) || PINNEY_COLORS[0];
                 const isWithinTarget22 = idx < targetSpots;
@@ -315,8 +315,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 return (
                   <tr
                     key={player.id}
-                    className={`transition hover:bg-slate-800/50 ${
-                      player.is_locked ? 'bg-amber-500/5' : isWithinTarget22 ? 'bg-slate-900' : 'bg-slate-950/40 opacity-80'
+                    className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                      player.is_locked ? 'bg-amber-50 dark:bg-amber-500/5' : isWithinTarget22 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-950/40 opacity-80'
                     }`}
                   >
                     {/* Rank */}
@@ -331,10 +331,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                           {player.pinney_number}
                         </span>
                         <div>
-                          <div className="font-bold text-white text-sm flex items-center gap-1.5">
+                          <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
                             <span>{player.name}</span>
                             {player.is_locked && (
-                              <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-1.5 py-0.2 rounded font-semibold">
+                              <span className="text-[10px] bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 px-1.5 py-0.2 rounded font-semibold">
                                 Locked 🔒
                               </span>
                             )}
@@ -346,7 +346,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
                     {/* Group */}
                     <td className="p-3.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                         {player.group_name}
                       </span>
                     </td>
@@ -355,31 +355,31 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     <td className="p-3.5 text-center font-black text-sm">
                       {overallAvg > 0 ? (
                         <span className={`px-2.5 py-1 rounded-xl border ${
-                          overallAvg >= 4 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
-                          overallAvg >= 3 ? 'bg-blue-500/20 text-blue-300 border-blue-500/40' :
-                          overallAvg >= 2 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                          'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          overallAvg >= 4 ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40' :
+                          overallAvg >= 3 ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/40' :
+                          overallAvg >= 2 ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40' :
+                          'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40'
                         }`}>
                           {overallAvg.toFixed(1)}
                         </span>
                       ) : (
-                        <span className="text-slate-500 text-xs">-</span>
+                        <span className="text-slate-400 text-xs">-</span>
                       )}
                     </td>
 
                     {/* Offense */}
-                    <td className="p-3.5 text-center hidden md:table-cell text-slate-300 font-semibold">
+                    <td className="p-3.5 text-center hidden md:table-cell text-slate-600 dark:text-slate-300 font-semibold">
                       {offAvg > 0 ? offAvg.toFixed(1) : '-'}
                     </td>
 
                     {/* Defense */}
-                    <td className="p-3.5 text-center hidden md:table-cell text-slate-300 font-semibold">
+                    <td className="p-3.5 text-center hidden md:table-cell text-slate-600 dark:text-slate-300 font-semibold">
                       {defAvg > 0 ? defAvg.toFixed(1) : '-'}
                     </td>
 
                     {/* Evaluator count */}
                     <td className="p-3.5 text-center hidden sm:table-cell">
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-400 dark:text-slate-400">
                         {evaluatorCount} coach{evaluatorCount !== 1 ? 'es' : ''} ({evalCount} evals)
                       </span>
                     </td>
@@ -391,7 +391,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         className={`p-2 rounded-xl border transition ${
                           player.is_locked
                             ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
-                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-700 dark:hover:text-white'
                         }`}
                         title={player.is_locked ? 'Click to Unlock spot' : 'Click to Lock onto team'}
                       >
@@ -403,7 +403,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     <td className="p-3.5 text-right">
                       <button
                         onClick={() => setSelectedPlayerForDetail(player)}
-                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition text-xs flex items-center gap-1 ml-auto"
+                        className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition text-xs flex items-center gap-1 ml-auto"
                       >
                         <span>Inspect</span>
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -420,17 +420,17 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       {/* PLAYER DETAIL MODAL / DRAWER */}
       {selectedPlayerForDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto space-y-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white">{selectedPlayerForDetail.name}</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{selectedPlayerForDetail.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   #{selectedPlayerForDetail.pinney_number} • {selectedPlayerForDetail.pinney_color} • {selectedPlayerForDetail.group_name}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedPlayerForDetail(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 ✕
               </button>
@@ -438,28 +438,28 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
             {/* Side-by-side Evaluator Notes */}
             <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Recorded Coach Notes</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recorded Coach Notes</h4>
               {notes.filter(n => n.player_id === selectedPlayerForDetail.id).length === 0 ? (
-                <p className="text-xs text-slate-500 italic">No notes recorded yet.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 italic">No notes recorded yet.</p>
               ) : (
                 notes
                   .filter(n => n.player_id === selectedPlayerForDetail.id)
                   .map(n => (
-                    <div key={n.id} className="p-3 bg-slate-800/70 border border-slate-700/60 rounded-xl text-xs space-y-1">
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span className="font-semibold text-amber-300">{n.evaluator_name}</span>
+                    <div key={n.id} className="p-3 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-xl text-xs space-y-1">
+                      <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                        <span className="font-semibold text-amber-600 dark:text-amber-300">{n.evaluator_name}</span>
                         <span className="text-[10px]">{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      {n.preset_tag && <div className="font-bold text-white">{n.preset_tag}</div>}
-                      {n.custom_text && <div className="text-slate-300">{n.custom_text}</div>}
+                      {n.preset_tag && <div className="font-bold text-slate-900 dark:text-white">{n.preset_tag}</div>}
+                      {n.custom_text && <div className="text-slate-600 dark:text-slate-300">{n.custom_text}</div>}
                     </div>
                   ))
               )}
             </div>
 
             {/* Detailed Criteria Scores Breakdown */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Criteria Ratings</h4>
+            <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Criteria Ratings</h4>
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 {criteria.map(crit => {
                   const evalsForCrit = evaluations.filter(
@@ -469,12 +469,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   const avg = evalsForCrit.reduce((a, b) => a + b.score, 0) / evalsForCrit.length;
 
                   return (
-                    <div key={crit.id} className="flex items-center justify-between p-2 bg-slate-800/40 rounded-lg text-xs">
+                    <div key={crit.id} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-xs">
                       <div>
-                        <span className="text-white font-medium">{crit.name}</span>
-                        <span className="text-[10px] text-slate-500 ml-1.5">({crit.category})</span>
+                        <span className="text-slate-800 dark:text-white font-medium">{crit.name}</span>
+                        <span className="text-[10px] text-slate-400 ml-1.5">({crit.category})</span>
                       </div>
-                      <span className="font-bold text-amber-300">{avg.toFixed(1)} / 5</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-300">{avg.toFixed(1)} / 5</span>
                     </div>
                   );
                 })}

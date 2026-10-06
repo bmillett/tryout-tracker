@@ -18,28 +18,28 @@ export const SyncStatusBadge: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md bg-slate-900/80 border border-slate-700/60 shadow-sm">
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/60 shadow-sm">
       {online ? (
-        <span className="flex items-center gap-1 text-emerald-400">
+        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
           <Wifi className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{isCloudActive ? 'Cloud Live' : 'Online'}</span>
         </span>
       ) : (
-        <span className="flex items-center gap-1 text-amber-400">
+        <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
           <WifiOff className="w-3.5 h-3.5" />
           <span>Offline (Saving locally)</span>
         </span>
       )}
 
       {syncing && (
-        <span className="flex items-center gap-1 text-sky-400">
+        <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
           <RefreshCw className="w-3 h-3 animate-spin" />
           <span className="text-[10px]">Syncing...</span>
         </span>
       )}
 
       {pendingCount > 0 && !syncing && (
-        <span className="px-1.5 py-0.2 text-[10px] bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30">
+        <span className="px-1.5 py-0.2 text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-full border border-amber-500/30">
           {pendingCount} queued
         </span>
       )}

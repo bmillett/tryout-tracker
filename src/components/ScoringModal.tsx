@@ -29,11 +29,11 @@ interface ScoringModalProps {
 }
 
 const SCORE_LEVELS = [
-  { score: 1, label: '--', sub: 'Novice / 0', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30' },
-  { score: 2, label: '-', sub: 'Below / 1-', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30' },
-  { score: 3, label: 'Std', sub: 'Standard / 1', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40 hover:bg-blue-500/30' },
-  { score: 4, label: '+', sub: 'Above / 2', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' },
-  { score: 5, label: '++', sub: 'Expert / 3+', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40 hover:bg-purple-500/30' },
+  { score: 1, label: '--', sub: 'Novice / 0', color: 'bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/30' },
+  { score: 2, label: '-', sub: 'Below / 1-', color: 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/40 hover:bg-amber-500/30' },
+  { score: 3, label: 'Std', sub: 'Standard / 1', color: 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/40 hover:bg-blue-500/30' },
+  { score: 4, label: '+', sub: 'Above / 2', color: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' },
+  { score: 5, label: '++', sub: 'Expert / 3+', color: 'bg-purple-500/20 text-purple-600 dark:text-purple-300 border-purple-500/40 hover:bg-purple-500/30' },
 ];
 
 export const ScoringModal: React.FC<ScoringModalProps> = ({
@@ -109,23 +109,23 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
       {/* Modal Card / Bottom Sheet */}
-      <div className="w-full sm:max-w-2xl bg-slate-900 border border-slate-800 sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden">
+      <div className="w-full sm:max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden">
         
         {/* Sticky Header with Player Info & Quick Nav */}
-        <div className="p-4 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black font-mono text-xl border shadow-inner ${pinney.bg} ${pinney.text} ${pinney.border}`}>
               #{player.pinney_number}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black text-white">{player.name}</h3>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">{player.name}</h3>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   {player.group_name}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Evaluating as <span className="text-amber-400 font-semibold">{evaluatorName}</span>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Evaluating as <span className="text-amber-500 dark:text-amber-400 font-semibold">{evaluatorName}</span>
               </p>
             </div>
           </div>
@@ -135,7 +135,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
             <button
               onClick={() => onNavigate('prev')}
               disabled={!hasPrev}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition"
               title="Previous Player"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -143,14 +143,14 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
             <button
               onClick={() => onNavigate('next')}
               disabled={!hasNext}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition"
               title="Next Player"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white transition ml-1"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition ml-1"
             >
               <X className="w-5 h-5" />
             </button>
@@ -158,7 +158,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
         </div>
 
         {/* Category Tabs */}
-        <div className="flex border-b border-slate-800 px-4 bg-slate-900/50 gap-2 overflow-x-auto shrink-0 py-2">
+        <div className="flex border-b border-slate-200 dark:border-slate-800 px-4 bg-slate-50/50 dark:bg-slate-900/50 gap-2 overflow-x-auto shrink-0 py-2">
           {(['Offense', 'Defense', 'Athleticism & Intangibles', 'Notes'] as const).map((tab) => {
             const count = tab === 'Notes' ? myPlayerNotes.length : criteria.filter(c => c.category === tab).length;
             const ratedCount = tab === 'Notes' ? 0 : criteria.filter(c => c.category === tab && scoreMap.has(c.id)).length;
@@ -169,7 +169,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
                   activeTab === tab
                     ? 'bg-amber-400 text-slate-950 shadow'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                 }`}
               >
                 {tab === 'Offense' && <Zap className="w-3.5 h-3.5" />}
@@ -178,12 +178,12 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                 {tab === 'Notes' && <MessageSquare className="w-3.5 h-3.5" />}
                 <span>{tab}</span>
                 {tab !== 'Notes' ? (
-                  <span className={`text-[10px] px-1.5 rounded-full ${activeTab === tab ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                  <span className={`text-[10px] px-1.5 rounded-full ${activeTab === tab ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                     {ratedCount}/{count}
                   </span>
                 ) : (
                   count > 0 && (
-                    <span className="text-[10px] px-1.5 rounded-full bg-amber-500/20 text-amber-300">
+                    <span className="text-[10px] px-1.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300">
                       {count}
                     </span>
                   )
@@ -197,7 +197,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {activeTab !== 'Notes' ? (
             filteredCriteria.length === 0 ? (
-              <div className="text-center py-10 text-slate-500 text-xs">
+              <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">
                 No criteria found in this category.
               </div>
             ) : (
@@ -206,21 +206,21 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                 return (
                   <div
                     key={crit.id}
-                    className="p-3.5 bg-slate-800/40 border border-slate-700/50 rounded-2xl space-y-2.5 transition hover:border-slate-700"
+                    className="p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-2xl space-y-2.5 transition hover:border-slate-300 dark:hover:border-slate-700"
                   >
                     {/* Header: Skill Name & Exemplar */}
                     <div>
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <h4 className="font-bold text-white text-sm">{crit.name}</h4>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm">{crit.name}</h4>
                         {crit.exemplar_player_name && (
-                          <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
-                            <Sparkles className="w-3 h-3 text-amber-400" />
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+                            <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                             <span>e.g. {crit.exemplar_player_name}</span>
                           </span>
                         )}
                       </div>
                       {crit.description && (
-                        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                           {crit.description}
                         </p>
                       )}
@@ -239,11 +239,11 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                             className={`py-2 px-1 rounded-xl border text-center transition flex flex-col items-center justify-center active:scale-95 ${
                               isSelected
                                 ? 'bg-amber-400 border-amber-400 text-slate-950 font-black shadow-lg scale-102 ring-2 ring-amber-400/30'
-                                : `${lvl.color} border-slate-700/60`
+                                : `${lvl.color} border-slate-200 dark:border-slate-700/60`
                             }`}
                           >
                             <span className="text-sm font-black tracking-tight">{lvl.label}</span>
-                            <span className={`text-[9px] font-semibold ${isSelected ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-[9px] font-semibold ${isSelected ? 'text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}>
                               {lvl.sub.split('/')[0]}
                             </span>
                           </button>
@@ -259,8 +259,8 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
             <div className="space-y-4">
               {/* Quick Preset Chips */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   <span>Tap to add preset observation</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -269,7 +269,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                       key={tag}
                       onClick={() => handlePresetSelect(tag)}
                       disabled={isFinalized}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-amber-400/40 transition active:scale-95"
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-amber-400/40 transition active:scale-95"
                     >
                       {tag}
                     </button>
@@ -278,8 +278,8 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
               </div>
 
               {/* Freeform Note Input */}
-              <form onSubmit={handleAddNote} className="space-y-2 pt-2 border-t border-slate-800">
-                <label className="block text-xs font-bold text-slate-300">
+              <form onSubmit={handleAddNote} className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
                   Add custom note / observation
                 </label>
                 <div className="flex gap-2">
@@ -289,7 +289,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                     value={customNoteText}
                     onChange={(e) => setCustomNoteText(e.target.value)}
                     disabled={isFinalized}
-                    className="flex-1 bg-slate-800 text-white text-xs border border-slate-700 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-400"
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-400"
                   />
                   <button
                     type="submit"
@@ -303,24 +303,24 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
 
               {/* List of my previous notes on this player */}
               <div className="space-y-2 pt-3">
-                <h5 className="text-xs font-bold text-slate-400">My Notes on {player.name}</h5>
+                <h5 className="text-xs font-bold text-slate-500 dark:text-slate-400">My Notes on {player.name}</h5>
                 {myPlayerNotes.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">No notes recorded yet.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 italic">No notes recorded yet.</p>
                 ) : (
                   myPlayerNotes.map((note) => (
                     <div
                       key={note.id}
-                      className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 text-xs flex items-start justify-between gap-2"
+                      className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs flex items-start justify-between gap-2"
                     >
                       <div>
                         {note.preset_tag && (
-                          <div className="font-semibold text-amber-300 mb-0.5">{note.preset_tag}</div>
+                          <div className="font-semibold text-amber-600 dark:text-amber-300 mb-0.5">{note.preset_tag}</div>
                         )}
                         {note.custom_text && (
-                          <div className="text-slate-200">{note.custom_text}</div>
+                          <div className="text-slate-700 dark:text-slate-200">{note.custom_text}</div>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500 shrink-0">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
                         {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -332,11 +332,11 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
         </div>
 
         {/* Footer info bar */}
-        <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
+        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
           <span>{scoreMap.size} of {criteria.length} total skills graded</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-xs transition"
+            className="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold rounded-xl text-xs transition"
           >
             Done
           </button>

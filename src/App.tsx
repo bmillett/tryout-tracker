@@ -11,6 +11,7 @@ import { ScoringModal } from './components/ScoringModal';
 import { AdminPinModal } from './components/AdminPinModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Leaderboard } from './components/Leaderboard';
+import { useTheme } from './hooks/useTheme';
 
 import { 
   Users, 
@@ -19,10 +20,14 @@ import {
   Search, 
   Flame, 
   LogOut,
-  Lock
+  Lock,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
+
   const [evaluatorName, setEvaluatorName] = useState<string>(() => {
     return localStorage.getItem('ignite_evaluator_name') || '';
   });
@@ -123,9 +128,9 @@ export const App: React.FC = () => {
   const selectedPlayerIndex = selectedPlayer ? filteredPlayers.findIndex(p => p.id === selectedPlayer.id) : -1;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-400 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-amber-400 selection:text-slate-950">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           
           {/* Logo / Brand */}
@@ -135,15 +140,15 @@ export const App: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="font-black text-sm tracking-tight text-white leading-none">
+                <h1 className="font-black text-sm tracking-tight text-slate-900 dark:text-white leading-none">
                   IGNITE JUNIORS
                 </h1>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30">
                   {activeSession?.name.split('-')[0] || 'Tryouts'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-tight">
-                Evaluator: <strong className="text-slate-200">{evaluatorName}</strong>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                Evaluator: <strong className="text-slate-700 dark:text-slate-200">{evaluatorName}</strong>
               </p>
             </div>
           </div>
@@ -152,17 +157,26 @@ export const App: React.FC = () => {
           <div className="flex items-center gap-2">
             <SyncStatusBadge />
 
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white border border-slate-200 dark:border-transparent transition"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {/* Coach Leaderboard Button */}
             <button
               onClick={handleLeaderboardClick}
               className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
                 currentView === 'leaderboard'
                   ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
-                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700/80'
+                  : 'bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/80'
               }`}
               title="Coach Roster & Leaderboard"
             >
-              <Trophy className="w-4 h-4 text-amber-400" />
+              <Trophy className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               <span className="hidden sm:inline">Roster Board</span>
               {!isAdminUnlocked && <Lock className="w-3 h-3 text-slate-400" />}
             </button>
@@ -173,11 +187,11 @@ export const App: React.FC = () => {
               className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
                 currentView === 'admin'
                   ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
-                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700/80'
+                  : 'bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/80'
               }`}
               title="Coach Settings / Admin"
             >
-              <Settings className="w-4 h-4 text-slate-300" />
+              <Settings className="w-4 h-4 text-slate-500 dark:text-slate-300" />
               <span className="hidden sm:inline">Settings</span>
               {!isAdminUnlocked && <Lock className="w-3 h-3 text-slate-400" />}
             </button>
@@ -193,7 +207,7 @@ export const App: React.FC = () => {
                   setEvaluatorName('');
                 }
               }}
-              className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition"
               title="Switch Evaluator Profile (Locks Admin)"
             >
               <LogOut className="w-4 h-4" />
@@ -218,7 +232,7 @@ export const App: React.FC = () => {
                   placeholder="Quick find by name or jersey #..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 text-white text-xs border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
+                  className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
                 />
               </div>
 
@@ -231,7 +245,7 @@ export const App: React.FC = () => {
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
                       selectedGroupFilter === group
                         ? 'bg-amber-400 text-slate-950 shadow-md'
-                        : 'bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
                     }`}
                   >
                     {group}
@@ -242,8 +256,8 @@ export const App: React.FC = () => {
                   onClick={() => setOnlyUnratedFilter(!onlyUnratedFilter)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition ${
                     onlyUnratedFilter
-                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                      ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border-sky-500/40'
+                      : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-700 dark:hover:text-white'
                   }`}
                 >
                   Unrated Only
@@ -253,17 +267,17 @@ export const App: React.FC = () => {
 
             {/* Evaluator Notice if Finalized */}
             {activeSession?.status === 'finalized' && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-2xl text-xs flex items-center justify-between">
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-2xl text-xs flex items-center justify-between">
                 <span>🔒 This tryout session has been finalized by coaches (Read-Only Mode).</span>
               </div>
             )}
 
             {/* Responsive Player Card Grid */}
             {filteredPlayers.length === 0 ? (
-              <div className="text-center py-16 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6">
-                <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                <h4 className="text-sm font-bold text-slate-300">No players match the criteria</h4>
-                <p className="text-xs text-slate-500 mt-1">Try switching filters or check Coach settings.</p>
+              <div className="text-center py-16 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-6">
+                <Users className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-slate-600 dark:text-slate-300">No players match the criteria</h4>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try switching filters or check Coach settings.</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
