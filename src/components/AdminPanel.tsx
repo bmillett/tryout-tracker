@@ -20,7 +20,9 @@ import {
   Flame,
   Sparkles,
   AlertCircle,
-  KeyRound
+  KeyRound,
+  Pencil,
+  Check
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -53,6 +55,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [newCritCat, setNewCritCat] = useState<'Offense' | 'Defense' | 'Athleticism & Intangibles'>('Offense');
   const [newCritDesc, setNewCritDesc] = useState('');
   const [newCritExemplar, setNewCritExemplar] = useState('');
+
+  // Inline Criterion Edit State
+  const [editingCritId, setEditingCritId] = useState<string | null>(null);
+  const [editCritName, setEditCritName] = useState('');
+  const [editCritCat, setEditCritCat] = useState<'Offense' | 'Defense' | 'Athleticism & Intangibles'>('Offense');
+  const [editCritDesc, setEditCritDesc] = useState('');
 
   // New Session Form State
   const [newSessionName, setNewSessionName] = useState('');
@@ -181,6 +189,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       await db.criteria.delete(critId);
       onRefresh();
     }
+  };
+
+  // Save Inline Criterion Edit
+  const handleSaveCriterionEdit = async () => {
+    if (!editingCritId || !editCritName.trim()) return;
+    await db.criteria.update(editingCritId, {
+      name: editCritName.trim(),
+      category: editCritCat,
+      description: editCritDesc.trim(),
+    });
+    setEditingCritId(null);
+    onRefresh();
   };
 
   // Finalize / Unlock Session
@@ -620,44 +640,109 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  {catCriteria.map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex items-start justify-between p-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/40 gap-3"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-slate-800 dark:text-white text-xs">{c.name}</span>
-                          {c.exemplar_player_name && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 text-[10px] font-medium flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400" />
-                              <span>Exemplar: {c.exemplar_player_name}</span>
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{c.description}</p>
-                      </div>
+                  {catCriteria.map((c) => {
+                    const isEditing = editingCritId === c.id;
+                    return (
+                      <div
+                        key={c.id}
+                        className="p-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/40"
+                      >
+                        {isEditing ? (
+                          /* ── Edit mode ── */
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                value={editCritName}
+                                onChange={(e) => setEditCritName(e.target.value)}
+                                placeholder="Skill Name"
+                                className={inputCls}
+                                autoFocus
+                              />
+                              <select
+                                value={editCritCat}
+                                onChange={(e) => setEditCritCat(e.target.value as any)}
+                                className={selectCls}
+                              >
+                                <option value="Offense">Offense</option>
+                                <option value="Defense">Defense</option>
+                                <option value="Athleticism & Intangibles">Athleticism & Intangibles</option>
+                              </select>
+                            </div>
+                            <textarea
+                              value={editCritDesc}
+                              onChange={(e) => setEditCritDesc(e.target.value)}
+                              placeholder="Description / what evaluators should look for..."
+                              className={`w-full ${inputCls}`}
+                              rows={2}
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleSaveCriterionEdit}
+                                className="flex items-center gap-1 py-1 px-3 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold rounded-lg transition"
+                              >
+                                <Check className="w-3 h-3" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingCritId(null)}
+                                className="py-1 px-3 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded-lg transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* ── Read mode ── */
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-slate-800 dark:text-white text-xs">{c.name}</span>
+                                {c.exemplar_player_name && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 text-[10px] font-medium flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+                                    <span>Exemplar: {c.exemplar_player_name}</span>
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{c.description}</p>
+                            </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <input
-                          type="text"
-                          placeholder="Exemplar"
-                          value={c.exemplar_player_name || ''}
-                          onChange={async (e) => {
-                            await db.criteria.update(c.id, { exemplar_player_name: e.target.value });
-                            onRefresh();
-                          }}
-                          className="w-28 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-[11px] text-amber-600 dark:text-amber-300"
-                        />
-                        <button
-                          onClick={() => handleDeleteCriterion(c.id)}
-                          className="text-slate-400 hover:text-rose-500 p-1"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <input
+                                type="text"
+                                placeholder="Exemplar"
+                                value={c.exemplar_player_name || ''}
+                                onChange={async (e) => {
+                                  await db.criteria.update(c.id, { exemplar_player_name: e.target.value });
+                                  onRefresh();
+                                }}
+                                className="w-28 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-[11px] text-amber-600 dark:text-amber-300"
+                              />
+                              <button
+                                onClick={() => {
+                                  setEditingCritId(c.id);
+                                  setEditCritName(c.name);
+                                  setEditCritCat(c.category);
+                                  setEditCritDesc(c.description || '');
+                                }}
+                                className="text-slate-400 hover:text-amber-500 p-1"
+                                title="Edit criterion"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCriterion(c.id)}
+                                className="text-slate-400 hover:text-rose-500 p-1"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
