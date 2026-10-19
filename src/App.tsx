@@ -252,7 +252,7 @@ export const App: React.FC = () => {
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
                       selectedGroupFilter === group
                         ? 'bg-amber-400 text-slate-950 shadow-md'
-                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
                     }`}
                   >
                     {group}
@@ -270,7 +270,7 @@ export const App: React.FC = () => {
                           : g === 'F'
                           ? 'bg-violet-500 text-white shadow-md'
                           : 'bg-amber-400 text-slate-950 shadow-md'
-                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
                     }`}
                   >
                     {g === 'All' ? 'All Genders' : g}

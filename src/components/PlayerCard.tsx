@@ -31,7 +31,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           ? 'bg-slate-100 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800/60 opacity-60'
           : player.status === 'injured' || player.status === 'absent'
           ? 'bg-amber-50 dark:bg-slate-900/40 border-amber-200 dark:border-amber-900/40 opacity-70'
-          : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >
       {mixed_gender && player.gender && <GenderStrip gender={player.gender} />}
