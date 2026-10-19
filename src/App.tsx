@@ -53,6 +53,17 @@ export const App: React.FC = () => {
   const [selectedGenderFilter, setSelectedGenderFilter] = useState<'All' | 'M' | 'F'>('All');
   const [onlyUnratedFilter, setOnlyUnratedFilter] = useState(false);
 
+  // Show full player names on grid cards (per-device, per-team preference)
+  const fullNamesKey = `${team.slug}_show_full_names`;
+  const [showFullNames, setShowFullNames] = useState<boolean>(() => {
+    return localStorage.getItem(`${team.slug}_show_full_names`) === 'true';
+  });
+  const toggleFullNames = () => {
+    const next = !showFullNames;
+    setShowFullNames(next);
+    localStorage.setItem(fullNamesKey, String(next));
+  };
+
   // Live queries from IndexedDB
   const sessions = useLiveQuery(() => db.sessions.toArray(), []) || [];
   const players = useLiveQuery(
@@ -278,6 +289,18 @@ export const App: React.FC = () => {
                 ))}
 
                 <button
+                  onClick={toggleFullNames}
+                  aria-pressed={showFullNames}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition ${
+                    showFullNames
+                      ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border-sky-500/40'
+                      : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-700 dark:hover:text-white'
+                  }`}
+                >
+                  Full Names
+                </button>
+
+                <button
                   onClick={() => setOnlyUnratedFilter(!onlyUnratedFilter)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition ${
                     onlyUnratedFilter
@@ -314,6 +337,7 @@ export const App: React.FC = () => {
                     <PlayerCard
                       key={player.id}
                       player={player}
+                      showFullName={showFullNames}
                       evaluations={playerEvals}
                       totalCriteriaCount={criteria.length}
                       onClick={() => setSelectedPlayer(player)}

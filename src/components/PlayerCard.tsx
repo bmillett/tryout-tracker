@@ -7,6 +7,7 @@ import { CheckCircle2, EyeOff, Bandage, Ban } from 'lucide-react';
 
 interface PlayerCardProps {
   player: Player;
+  showFullName?: boolean;
   evaluations: Evaluation[];
   totalCriteriaCount: number;
   onClick: () => void;
@@ -14,6 +15,7 @@ interface PlayerCardProps {
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({
   player,
+  showFullName = false,
   evaluations,
   totalCriteriaCount,
   onClick
@@ -69,13 +71,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         </div>
       </div>
 
-      {/* Player Name (First Name + Last Initial for compact sideline grid) */}
+      {/* Player Name (First Name + Last Initial for compact sideline grid; full name when toggled) */}
       <div className="w-full">
-        <div className="flex items-center gap-1.5">
-        <h4 className="font-bold text-slate-900 dark:text-white text-base tracking-tight truncate group-hover:text-amber-500 dark:group-hover:text-amber-400 transition">
+        <div className={`flex gap-1.5 ${showFullName ? 'items-start' : 'items-center'}`}>
+        <h4 className={`font-bold text-slate-900 dark:text-white text-base tracking-tight group-hover:text-amber-500 dark:group-hover:text-amber-400 transition ${showFullName ? 'break-words min-w-0' : 'truncate'}`}>
           {(() => {
             const parts = player.name.trim().split(/\s+/);
-            if (parts.length > 1) {
+            if (!showFullName && parts.length > 1) {
               const firstName = parts[0];
               const lastInitial = parts[parts.length - 1][0].toUpperCase();
               return `${firstName} ${lastInitial}.`;
