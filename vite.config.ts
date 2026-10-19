@@ -13,10 +13,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      workbox: {
+        // Never serve index.html for serverless function routes (sub-task 6)
+        navigateFallbackDenylist: [/^\/api\//]
+      },
       manifest: {
-        name: 'Ignite Tryout Tracker',
-        short_name: 'TryoutTracker',
-        description: 'Sideline tryout evaluator for Ignite Juniors Ultimate Frisbee',
+        name: 'Tryout Tracker',
+        short_name: 'Tryout Tracker',
+        description: 'Sideline tryout evaluator for team tryouts',
         theme_color: '#1e293b',
         background_color: '#0f172a',
         display: 'standalone',

@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Player, Evaluation } from '../types';
 import { PINNEY_COLORS } from '../data/defaultData';
+import { useTeam } from '../context/TeamContext';
+import { GenderBadge, GenderStrip } from './GenderBadge';
 import { CheckCircle2, EyeOff, Bandage, Ban } from 'lucide-react';
 
 interface PlayerCardProps {
@@ -16,6 +18,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   totalCriteriaCount,
   onClick
 }) => {
+  const { mixed_gender } = useTeam();
   const pinney = PINNEY_COLORS.find(c => c.name.toLowerCase() === player.pinney_color.toLowerCase()) || PINNEY_COLORS[0];
   const evalCount = evaluations.length;
   const isComplete = totalCriteriaCount > 0 && evalCount >= totalCriteriaCount;
@@ -31,6 +34,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >
+      {mixed_gender && player.gender && <GenderStrip gender={player.gender} />}
+
       {/* Top Header: Pinney badge & Group */}
       <div className="flex items-start justify-between gap-2 w-full mb-3">
         {/* Large Pinney Badge */}
@@ -66,6 +71,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
       {/* Player Name (First Name + Last Initial for compact sideline grid) */}
       <div className="w-full">
+        <div className="flex items-center gap-1.5">
         <h4 className="font-bold text-slate-900 dark:text-white text-base tracking-tight truncate group-hover:text-amber-500 dark:group-hover:text-amber-400 transition">
           {(() => {
             const parts = player.name.trim().split(/\s+/);
@@ -77,6 +83,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             return player.name;
           })()}
         </h4>
+        {mixed_gender && player.gender && <GenderBadge gender={player.gender} />}
+        </div>
         <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
           <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: pinney.hex }} />
           <span>{player.pinney_color}</span>

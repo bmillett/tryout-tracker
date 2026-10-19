@@ -1,14 +1,22 @@
 import { db } from './db';
 import { getFirestoreDB, getStoredFirebaseConfig } from './firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  onSnapshot, 
-  type Unsubscribe 
+import {
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  onSnapshot,
+  type Unsubscribe
 } from 'firebase/firestore';
 import type { Evaluation, Criterion, Player, PlayerNote } from '../types';
-import { DEFAULT_CRITERIA_TEMPLATES, INITIAL_DEFAULT_SESSION, INITIAL_SAMPLE_PLAYERS } from '../data/defaultData';
+import { DEFAULT_CRITERIA_TEMPLATES, INITIAL_DEFAULT_SESSION } from '../data/defaultData';
+import { parseRoute } from './team';
+
+/** Returns the team slug from the current URL, or 'default' as a fallback. */
+function getTeamSlug(): string {
+  const route = parseRoute();
+  return route.kind === 'team' ? route.slug : 'default';
+}
 
 export class SyncService {
   private static isSyncing = false;
@@ -37,23 +45,18 @@ export class SyncService {
     // Check if initial session exists locally
     const sessionCount = await db.sessions.count();
     if (sessionCount === 0) {
-      await db.sessions.add(INITIAL_DEFAULT_SESSION);
-      
-      // Add default criteria for session 1
+      const slug = getTeamSlug();
+      // Use deterministic IDs (slug-scoped) so concurrent devices converge on the same records.
+      const sessionId = `session-${slug}-1`;
+      await db.sessions.add({ ...INITIAL_DEFAULT_SESSION, id: sessionId });
+
+      // Add default criteria (no sample players for new teams)
       const criteriaToAdd: Criterion[] = DEFAULT_CRITERIA_TEMPLATES.map((c, idx) => ({
         ...c,
-        id: `crit-s1-${idx + 1}`,
-        session_id: INITIAL_DEFAULT_SESSION.id
+        id: `crit-${slug}-s1-${idx + 1}`,
+        session_id: sessionId
       }));
       await db.criteria.bulkAdd(criteriaToAdd);
-
-      // Add default sample players
-      const playersToAdd: Player[] = INITIAL_SAMPLE_PLAYERS.map((p, idx) => ({
-        ...p,
-        id: `player-s1-${idx + 1}`,
-        session_id: INITIAL_DEFAULT_SESSION.id
-      }));
-      await db.players.bulkAdd(playersToAdd);
     }
 
     // Set up network listeners
@@ -86,8 +89,11 @@ export class SyncService {
     if (!firestore) return;
 
     try {
+      const slug = getTeamSlug();
+      const teamBase = `teams/${slug}`;
+
       // Listen to evaluations
-      const evalsCol = collection(firestore, 'evaluations');
+      const evalsCol = collection(firestore, teamBase, 'evaluations');
       const unsubEvals = onSnapshot(evalsCol, (snapshot) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added' || change.type === 'modified') {
@@ -103,7 +109,7 @@ export class SyncService {
       this.unsubscribers.push(unsubEvals);
 
       // Listen to notes
-      const notesCol = collection(firestore, 'player_notes');
+      const notesCol = collection(firestore, teamBase, 'player_notes');
       const unsubNotes = onSnapshot(notesCol, (snapshot) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added' || change.type === 'modified') {
@@ -119,7 +125,7 @@ export class SyncService {
       this.unsubscribers.push(unsubNotes);
 
       // Listen to players (locks, colors, status)
-      const playersCol = collection(firestore, 'players');
+      const playersCol = collection(firestore, teamBase, 'players');
       const unsubPlayers = onSnapshot(playersCol, (snapshot) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added' || change.type === 'modified') {
@@ -127,6 +133,8 @@ export class SyncService {
             if (data && data.id) {
               await db.players.put(data);
             }
+          } else if (change.type === 'removed') {
+            await db.players.delete(change.doc.id);
           }
         });
       }, (err) => {
@@ -134,8 +142,26 @@ export class SyncService {
       });
       this.unsubscribers.push(unsubPlayers);
 
+      // Listen to criteria (custom criteria, edits, exemplars)
+      const criteriaCol = collection(firestore, teamBase, 'criteria');
+      const unsubCriteria = onSnapshot(criteriaCol, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added' || change.type === 'modified') {
+            const data = change.doc.data() as Criterion;
+            if (data && data.id) {
+              await db.criteria.put(data);
+            }
+          } else if (change.type === 'removed') {
+            await db.criteria.delete(change.doc.id);
+          }
+        });
+      }, (err) => {
+        console.warn('Firestore criteria subscription notice:', err.message);
+      });
+      this.unsubscribers.push(unsubCriteria);
+
       // Listen to sessions (active/finalized status changes by coaches)
-      const sessionsCol = collection(firestore, 'sessions');
+      const sessionsCol = collection(firestore, teamBase, 'sessions');
       const unsubSessions = onSnapshot(sessionsCol, (snapshot) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === 'added' || change.type === 'modified') {
@@ -226,12 +252,51 @@ export class SyncService {
     this.flushQueue();
   }
 
+  // Delete a player locally and in Firebase. Reuses the upsert queue id so a pending update is replaced.
+  public static async deletePlayer(playerId: string) {
+    await db.players.delete(playerId);
+    await db.syncQueue.put({
+      id: `queue_player_${playerId}`,
+      type: 'player_delete',
+      payload: { id: playerId },
+      timestamp: Date.now()
+    });
+    this.notify();
+    this.flushQueue();
+  }
+
+  // Sync criterion add / edit to Firebase
+  public static async syncCriterion(criterion: Criterion) {
+    await db.criteria.put(criterion);
+    await db.syncQueue.put({
+      id: `queue_criterion_${criterion.id}`,
+      type: 'criterion_update',
+      payload: criterion,
+      timestamp: Date.now()
+    });
+    this.notify();
+    this.flushQueue();
+  }
+
+  // Delete a criterion locally and in Firebase. Reuses the upsert queue id so a pending update is replaced.
+  public static async deleteCriterion(criterionId: string) {
+    await db.criteria.delete(criterionId);
+    await db.syncQueue.put({
+      id: `queue_criterion_${criterionId}`,
+      type: 'criterion_delete',
+      payload: { id: criterionId },
+      timestamp: Date.now()
+    });
+    this.notify();
+    this.flushQueue();
+  }
+
   // Sync session status updates (finalize / unlock) to Firebase
   public static async syncSession(session: any) {
     await db.sessions.put(session);
     await db.syncQueue.put({
       id: `queue_session_${session.id}`,
-      type: 'session_update' as any,
+      type: 'session_update',
       payload: session,
       timestamp: Date.now()
     });
@@ -249,30 +314,47 @@ export class SyncService {
     this.isSyncing = true;
     this.notify();
 
+    let needsRerun = false;
     try {
+      const slug = getTeamSlug();
+      const teamBase = `teams/${slug}`;
       const items = await db.syncQueue.toArray();
       for (const item of items) {
         try {
           if (item.type === 'evaluation') {
             const evalItem = item.payload as Evaluation;
-            const evalDocRef = doc(firestore, 'evaluations', evalItem.id);
+            const evalDocRef = doc(firestore, teamBase, 'evaluations', evalItem.id);
             await setDoc(evalDocRef, evalItem, { merge: true });
             await db.evaluations.update(evalItem.id, { is_synced: true });
           } else if (item.type === 'note') {
             const noteItem = item.payload as PlayerNote;
-            const noteDocRef = doc(firestore, 'player_notes', noteItem.id);
+            const noteDocRef = doc(firestore, teamBase, 'player_notes', noteItem.id);
             await setDoc(noteDocRef, noteItem, { merge: true });
             await db.notes.update(noteItem.id, { is_synced: true });
           } else if (item.type === 'player_update' || item.type === 'player_lock') {
             const playerItem = item.payload as Player;
-            const playerDocRef = doc(firestore, 'players', playerItem.id);
+            const playerDocRef = doc(firestore, teamBase, 'players', playerItem.id);
             await setDoc(playerDocRef, playerItem, { merge: true });
-          } else if ((item.type as string) === 'session_update') {
+          } else if (item.type === 'player_delete') {
+            await deleteDoc(doc(firestore, teamBase, 'players', item.payload.id));
+          } else if (item.type === 'session_update') {
             const sessionItem = item.payload;
-            const sessionDocRef = doc(firestore, 'sessions', sessionItem.id);
+            const sessionDocRef = doc(firestore, teamBase, 'sessions', sessionItem.id);
             await setDoc(sessionDocRef, sessionItem, { merge: true });
+          } else if (item.type === 'criterion_update') {
+            const critItem = item.payload as Criterion;
+            const critDocRef = doc(firestore, teamBase, 'criteria', critItem.id);
+            await setDoc(critDocRef, critItem, { merge: true });
+          } else if (item.type === 'criterion_delete') {
+            await deleteDoc(doc(firestore, teamBase, 'criteria', item.payload.id));
           }
-          await db.syncQueue.delete(item.id);
+          // Only dequeue if the item was not replaced (same queue id) while we were sending it
+          const current = await db.syncQueue.get(item.id);
+          if (current && current.timestamp === item.timestamp) {
+            await db.syncQueue.delete(item.id);
+          } else if (current) {
+            needsRerun = true;
+          }
         } catch (e) {
           // If network / quota issue, stop loop until next trigger
           break;
@@ -284,5 +366,7 @@ export class SyncService {
       this.isSyncing = false;
       this.notify();
     }
+    // An item was replaced mid-flight; its own flush call returned early, so send it now
+    if (needsRerun) this.flushQueue();
   }
 }

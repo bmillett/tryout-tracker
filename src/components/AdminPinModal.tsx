@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, AlertCircle, X } from 'lucide-react';
+import { useTeam } from '../context/TeamContext';
 
 interface AdminPinModalProps {
   isOpen: boolean;
@@ -14,20 +15,22 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
   onSuccess,
   targetPin
 }) => {
+  const team = useTeam();
+  const adminKey = `${team.slug}_admin_unlocked`;
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
 
   if (!isOpen) return null;
 
   const handleDigit = (digit: string) => {
-    if (pin.length < 6) {
+    if (pin.length < targetPin.length) {
       const nextPin = pin + digit;
       setPin(nextPin);
       setError(false);
       
       // Auto submit if length matches
       if (nextPin === targetPin) {
-        sessionStorage.setItem('ignite_admin_unlocked', 'true');
+        sessionStorage.setItem(adminKey, 'true');
         setPin('');
         onSuccess();
       } else if (nextPin.length === targetPin.length) {
@@ -66,7 +69,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
 
         {/* PIN Indicators */}
         <div className="flex justify-center gap-3 mb-6">
-          {[0, 1, 2, 3].map((idx) => (
+          {Array.from({ length: targetPin.length }, (_, idx) => (
             <div
               key={idx}
               className={`w-4 h-4 rounded-full border transition-all duration-150 ${
@@ -118,7 +121,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
           </button>
         </div>
 
-        <p className="text-[11px] text-slate-400 dark:text-slate-500">Enter your 4-digit Coach PIN</p>
+        <p className="text-[11px] text-slate-400 dark:text-slate-500">Enter your {targetPin.length}-digit Coach PIN</p>
       </div>
     </div>
   );

@@ -165,5 +165,4 @@ export const INITIAL_DEFAULT_SESSION: TryoutSession = {
   target_roster_size: 22,
   date: new Date().toISOString().split('T')[0],
   status: 'active',
-  admin_pin_hash: '2026' // default coach PIN
 };

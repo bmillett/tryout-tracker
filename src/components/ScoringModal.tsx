@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '../types';
 import { PINNEY_COLORS, PRESET_NOTE_TAGS } from '../data/defaultData';
 import { SyncService } from '../services/sync';
+import { useTeam } from '../context/TeamContext';
+import { GenderBadge } from './GenderBadge';
 import { 
   X, 
   ChevronLeft, 
@@ -53,6 +55,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
   const [customNoteText, setCustomNoteText] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
 
+  const { mixed_gender } = useTeam();
   const pinney = PINNEY_COLORS.find(c => c.name.toLowerCase() === player.pinney_color.toLowerCase()) || PINNEY_COLORS[0];
   const isFinalized = session.status === 'finalized';
 
@@ -123,6 +126,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   {player.group_name}
                 </span>
+                {mixed_gender && player.gender && <GenderBadge gender={player.gender} />}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Evaluating as <span className="text-amber-500 dark:text-amber-400 font-semibold">{evaluatorName}</span>

@@ -10,3 +10,7 @@ dist-ssr
 .vite
 .bob 
 *.tsbuildinfo
+
+# Firebase service-account key files — keep them outside the repo
+*firebase-adminsdk*.json
+service-account*.json

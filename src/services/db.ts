@@ -1,6 +1,21 @@
 import Dexie, { type Table } from 'dexie';
 import type { Evaluation, Player, Criterion, TryoutSession, PlayerNote, PendingSyncItem } from '../types';
 
+/** Derive the team slug from the URL at module load time.
+ *  Matches the same pattern as parseRoute() in team.ts without creating a
+ *  circular dependency. Falls back to 'default' when the URL doesn't match. */
+function slugFromPathname(): string {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  if (
+    segments.length === 2 &&
+    segments[0] === 't' &&
+    /^[a-z0-9][a-z0-9-]*$/.test(segments[1])
+  ) {
+    return segments[1];
+  }
+  return 'default';
+}
+
 export class TryoutTrackerDB extends Dexie {
   sessions!: Table<TryoutSession, string>;
   criteria!: Table<Criterion, string>;
@@ -9,8 +24,8 @@ export class TryoutTrackerDB extends Dexie {
   notes!: Table<PlayerNote, string>;
   syncQueue!: Table<PendingSyncItem, string>;
 
-  constructor() {
-    super('TryoutTrackerDB');
+  constructor(dbName: string) {
+    super(dbName);
     this.version(1).stores({
       sessions: 'id, session_number, status',
       criteria: 'id, session_id, category, sort_order',
@@ -22,4 +37,4 @@ export class TryoutTrackerDB extends Dexie {
   }
 }
 
-export const db = new TryoutTrackerDB();
+export const db = new TryoutTrackerDB(`TryoutTrackerDB_${slugFromPathname()}`);

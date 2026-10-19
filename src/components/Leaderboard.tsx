@@ -3,6 +3,8 @@ import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '.
 import { PINNEY_COLORS } from '../data/defaultData';
 import { db } from '../services/db';
 import { SyncService } from '../services/sync';
+import { useTeam } from '../context/TeamContext';
+import { GenderBadge } from './GenderBadge';
 import {
   Trophy,
   Lock,
@@ -32,6 +34,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   onSessionChange,
   onRefresh
 }) => {
+  const { mixed_gender, slug: teamSlug } = useTeam();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'overall' | 'offense' | 'defense' | 'intangibles' | 'number'>('overall');
@@ -41,6 +44,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const lockedPlayers = players.filter(p => p.is_locked);
   const lockedCount = lockedPlayers.length;
   const openSpots = Math.max(0, targetSpots - lockedCount);
+
+  // Gender counts: active roster (non-cut), only shown when mixed_gender is on
+  const rosterPlayers = players.filter(p => p.status !== 'cut_moved_down');
+  const mCount = rosterPlayers.filter(p => p.gender === 'M').length;
+  const fCount = rosterPlayers.filter(p => p.gender === 'F').length;
 
   // Calculate scores per player
   const playerStats = players.map(player => {
@@ -125,7 +133,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       const presetTags = notes.filter(n => n.preset_tag).map(n => n.preset_tag).join('; ');
       const customComments = notes.filter(n => n.custom_text).map(n => `${n.evaluator_name}: ${n.custom_text}`).join(' | ');
 
-      return {
+      const row: Record<string, string | number> = {
         'Jersey #': player.pinney_number,
         'Name': player.name,
         'Pinney Color': player.pinney_color,
@@ -141,6 +149,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         'Preset Tags': presetTags,
         'Coach Notes': customComments
       };
+      if (mixed_gender) row['Gender'] = player.gender || '';
+      return row;
     });
 
     const csvContent = "data:text/csv;charset=utf-8," + 
@@ -149,7 +159,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Ignite_Tryout_${session.name.replace(/\s+/g, '_')}_Matrix.csv`);
+    link.setAttribute("download", `${teamSlug}_Tryout_${session.name.replace(/\s+/g, '_')}_Matrix.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -176,6 +186,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 {openSpots} Open Spot{openSpots !== 1 ? 's' : ''} Remaining
               </span>
             </h2>
+            {mixed_gender && (
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600/50">
+                  M: {mCount}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-600/50">
+                  F: {fCount}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -333,6 +353,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         <div>
                           <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
                             <span>{player.name}</span>
+                            {mixed_gender && player.gender && <GenderBadge gender={player.gender} />}
                             {player.is_locked && (
                               <span className="text-[10px] bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 px-1.5 py-0.2 rounded font-semibold">
                                 Locked 🔒
@@ -423,7 +444,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{selectedPlayerForDetail.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{selectedPlayerForDetail.name}</h3>
+                  {mixed_gender && selectedPlayerForDetail.gender && <GenderBadge gender={selectedPlayerForDetail.gender} />}
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   #{selectedPlayerForDetail.pinney_number} • {selectedPlayerForDetail.pinney_color} • {selectedPlayerForDetail.group_name}
                 </p>

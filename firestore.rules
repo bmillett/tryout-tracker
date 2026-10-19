@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// Tryout Tracker Firestore rules (multi-team layout).
+//
+//   teams/{slug}                                  team doc (name, coach_pin, mixed_gender, ...)
+//   teams/{slug}/sessions|players|evaluations|player_notes|criteria/{id}
+//
+// Rules only apply to client SDK traffic. The Vercel function (firebase-admin)
+// bypasses them, which is how team docs get created and edited.
+//
+// Isolation level is "convenience", not security: anyone who knows a team slug
+// can read and write that team's subcollections. There is no real auth yet.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helper: can this request touch the data of team `slug`?
+    //
+    // Today this is always true (no auth). When Firebase Auth is added, replace
+    // the body with a membership check against the (reserved) member_uids field:
+    //
+    //   return request.auth != null
+    //     && request.auth.uid in get(/databases/$(database)/documents/teams/$(slug)).data.member_uids;
+    //
+    // Note: that get() costs one extra document read per rule evaluation, and
+    // the team doc needs member_uids populated first (see the admin function).
+    // ---------------------------------------------------------------------
+    function canAccessTeam(slug) {
+      return true;
+    }
+
+    // Team doc: the client may GET it (the app calls getDoc on teams/{slug} in
+    // src/services/team.ts), but may NOT list the teams collection (the doc holds
+    // the coach PIN) and may NOT write it. We grant only `get`; `list`, `create`,
+    // `update` and `delete` stay denied by default.
+    match /teams/{slug} {
+      allow get: if true;
+    }
+
+    // Team data. `read` = get + list, which the realtime listeners need
+    // (onSnapshot on a collection is a list). `write` = create + update + delete;
+    // the app deletes players and criteria, so delete must be allowed.
+    match /teams/{slug}/sessions/{id} {
+      allow read, write: if canAccessTeam(slug);
+    }
+    match /teams/{slug}/players/{id} {
+      allow read, write: if canAccessTeam(slug);
+    }
+    match /teams/{slug}/evaluations/{id} {
+      allow read, write: if canAccessTeam(slug);
+    }
+    match /teams/{slug}/player_notes/{id} {
+      allow read, write: if canAccessTeam(slug);
+    }
+    match /teams/{slug}/criteria/{id} {
+      allow read, write: if canAccessTeam(slug);
+    }
+
+    // ---------------------------------------------------------------------
+    // LEGACY top-level collections (pre multi-team single-team Ignite data).
+    //
+    // Everything not matched above is denied, INCLUDING these. That is the
+    // intended end state (after cutover, sub-task 7).
+    //
+    // MIGRATION WINDOW: until all devices run the new app, old clients still read
+    // and write the top-level collections. If you deploy these rules before
+    // cutover, uncomment the block below so they keep working, then delete the
+    // block again (and redeploy) once /t/ignite is verified and the legacy data
+    // has been removed. Do not leave it enabled afterwards: it is fully open.
+    //
+    // match /{legacy}/{id} {
+    //   allow read, write: if legacy in ['sessions', 'players', 'criteria', 'evaluations', 'player_notes'];
+    // }
+    // ---------------------------------------------------------------------
+  }
+}

@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { User, Sparkles, ArrowRight, Smartphone, Share, MoreVertical, PlusSquare, Download } from 'lucide-react';
+import { useTeam } from '../context/TeamContext';
 
 interface EvaluatorPromptProps {
   onNameSubmit: (name: string) => void;
 }
 
 export const EvaluatorPrompt: React.FC<EvaluatorPromptProps> = ({ onNameSubmit }) => {
+  const team = useTeam();
   const [name, setName] = useState('');
   const [showInstallHelp, setShowInstallHelp] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      localStorage.setItem('ignite_evaluator_name', name.trim());
+      localStorage.setItem(`${team.slug}_evaluator_name`, name.trim());
       onNameSubmit(name.trim());
     }
   };
@@ -24,7 +26,7 @@ export const EvaluatorPrompt: React.FC<EvaluatorPromptProps> = ({ onNameSubmit }
           <Sparkles className="w-7 h-7" />
         </div>
 
-        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1">Ignite Tryout Tracker</h2>
+        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1">{team.name} Tryout Tracker</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
           Sideline real-time grading for coaches & support evaluators.
         </p>

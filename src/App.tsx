@@ -12,6 +12,7 @@ import { AdminPinModal } from './components/AdminPinModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Leaderboard } from './components/Leaderboard';
 import { useTheme } from './hooks/useTheme';
+import { useTeam } from './context/TeamContext';
 
 import { 
   Users, 
@@ -27,14 +28,18 @@ import {
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const team = useTeam();
+
+  const evalKey = `${team.slug}_evaluator_name`;
+  const adminKey = `${team.slug}_admin_unlocked`;
 
   const [evaluatorName, setEvaluatorName] = useState<string>(() => {
-    return localStorage.getItem('ignite_evaluator_name') || '';
+    return localStorage.getItem(`${team.slug}_evaluator_name`) || '';
   });
 
   const [activeSession, setActiveSession] = useState<TryoutSession | null>(null);
   const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(() => {
-    return sessionStorage.getItem('ignite_admin_unlocked') === 'true';
+    return sessionStorage.getItem(`${team.slug}_admin_unlocked`) === 'true';
   });
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'evaluator' | 'leaderboard' | 'admin'>('evaluator');
@@ -45,6 +50,7 @@ export const App: React.FC = () => {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroupFilter, setSelectedGroupFilter] = useState('All');
+  const [selectedGenderFilter, setSelectedGenderFilter] = useState<'All' | 'M' | 'F'>('All');
   const [onlyUnratedFilter, setOnlyUnratedFilter] = useState(false);
 
   // Live queries from IndexedDB
@@ -112,16 +118,17 @@ export const App: React.FC = () => {
   // Filter players for Evaluator Grid
   const filteredPlayers = players.filter(p => {
     if (p.status === 'cut_moved_down') return false;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.pinney_number.toString().includes(searchQuery);
     const matchesGroup = selectedGroupFilter === 'All' || p.group_name === selectedGroupFilter;
+    const matchesGender = !team.mixed_gender || selectedGenderFilter === 'All' || p.gender === selectedGenderFilter;
 
     if (onlyUnratedFilter) {
       const ratedCount = evaluations.filter(e => e.player_id === p.id && e.evaluator_name === evaluatorName).length;
       if (ratedCount >= criteria.length && criteria.length > 0) return false;
     }
 
-    return matchesSearch && matchesGroup;
+    return matchesSearch && matchesGroup && matchesGender;
   });
 
   const groups = ['All', ...Array.from(new Set(players.map(p => p.group_name || 'Group A')))];
@@ -140,8 +147,8 @@ export const App: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="font-black text-sm tracking-tight text-slate-900 dark:text-white leading-none">
-                  IGNITE JUNIORS
+                <h1 className="font-black text-sm tracking-tight text-slate-900 dark:text-white leading-none uppercase">
+                  {team.name}
                 </h1>
                 <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30">
                   {activeSession?.name.split('-')[0] || 'Tryouts'}
@@ -200,8 +207,8 @@ export const App: React.FC = () => {
             <button
               onClick={() => {
                 if (confirm('Switch evaluator profile name? This will also lock Coach Admin.')) {
-                  localStorage.removeItem('ignite_evaluator_name');
-                  sessionStorage.removeItem('ignite_admin_unlocked');
+                  localStorage.removeItem(evalKey);
+                  sessionStorage.removeItem(adminKey);
                   setIsAdminUnlocked(false);
                   setCurrentView('evaluator');
                   setEvaluatorName('');
@@ -249,6 +256,24 @@ export const App: React.FC = () => {
                     }`}
                   >
                     {group}
+                  </button>
+                ))}
+
+                {team.mixed_gender && (['All', 'M', 'F'] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setSelectedGenderFilter(g)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
+                      selectedGenderFilter === g
+                        ? g === 'M'
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : g === 'F'
+                          ? 'bg-violet-500 text-white shadow-md'
+                          : 'bg-amber-400 text-slate-950 shadow-md'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    {g === 'All' ? 'All Genders' : g}
                   </button>
                 ))}
 
@@ -346,7 +371,7 @@ export const App: React.FC = () => {
       {/* Admin PIN Keypad Modal */}
       <AdminPinModal
         isOpen={showPinModal}
-        targetPin={activeSession?.admin_pin_hash || '2026'}
+        targetPin={team.coach_pin}
         onClose={() => setShowPinModal(false)}
         onSuccess={() => {
           setIsAdminUnlocked(true);
