@@ -202,7 +202,12 @@ Add `--mixed-gender` if the team uses gender tagging.
 
 ### Migration status (Ignite)
 
-Migration was **applied** to the production Firestore project (`tryout-tracker-450cc`) on 2026-10-19: `teams/ignite` doc created; 1 session (`session-ignite-1`), 2 players, 16 evaluations, 0 player_notes copied. A follow-up dry run shows 0 remaining docs. Legacy top-level collections are untouched. **Cutover steps 2–6 above are still pending.**
+Migration was **applied** to the production Firestore project (`tryout-tracker-450cc`) on 2026-10-19: `teams/ignite` doc created; 1 session (`session-ignite-1`), 2 players, 16 evaluations, 0 player_notes copied.
+
+**Cutover completed** on 2026-10-19:
+- The live Firestore rules were republished without the legacy block. Unauthenticated REST reads of the top-level `players`, `sessions` and `evaluations` return 403, while `teams/<slug>` and its subcollections are readable.
+- The legacy top-level collections were backed up to a local JSON file outside the repo, then deleted.
+- The legacy data was test data. The 2 legacy players were linked into `teams/ignite` (same ids, session remapped to `session-ignite-1`, evaluation `criterion_id`s remapped to `crit-ignite-s1-<n>`), and `teams/ignite` has since been re-seeded with sample players (`player-s1-1..9`) and used by testers. If the legacy data is ever needed, it would have to be re-imported from the backup JSON by hand; `scripts/migrate-to-team.mjs` only reads the live top-level collections.
 
 ---
 
