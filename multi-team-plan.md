@@ -370,7 +370,9 @@
 
 **Relevant Context:** [`vite.config.ts`](vite.config.ts:16), [`index.html`](index.html), sub-tasks 5 and 6.
 
-**Status:** `[ ] deferred` (decided 2026-10-19: no real users yet, only testers, so the cost of waiting is low and adding it later only means re-installing on a few devices).
+**Status:** `[-] dropped` (decided 2026-10-19: teams will be shared by URL link or bookmark, which is as easy as installing. The shared manifest limitation is documented in the README under Known limitations. The notes below are kept in case this is revisited.)
+
+**Previous status:** deferred (decided 2026-10-19: no real users yet, only testers, so the cost of waiting is low and adding it later only means re-installing on a few devices).
 
 **Trigger to revisit:** after deploying to Vercel, have testers check:
 1. iPhone: open `/t/<slug>` in Safari → Add to Home Screen → launch the icon. If it opens the super-admin screen instead of the team, do this sub-task. If it opens the team, skip it.
