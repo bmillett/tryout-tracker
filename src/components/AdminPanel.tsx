@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { db } from '../services/db';
 import { SyncService } from '../services/sync';
@@ -23,6 +23,36 @@ import {
   Pencil,
   Check
 } from 'lucide-react';
+
+// Inline-editable player name. Edits stay local until blur / Enter, so a rename
+// is one Firestore write instead of one per keystroke. Empty names are rejected.
+const PlayerNameInput: React.FC<{ name: string; onCommit: (name: string) => void }> = ({ name, onCommit }) => {
+  const [value, setValue] = useState(name);
+  // Pick up remote changes (another device renamed the player).
+  useEffect(() => { setValue(name); }, [name]);
+
+  const commit = () => {
+    const trimmed = value.trim();
+    if (!trimmed) { setValue(name); return; }
+    if (trimmed !== name) onCommit(trimmed);
+    else setValue(name);
+  };
+
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        if (e.key === 'Escape') { setValue(name); (e.target as HTMLInputElement).blur(); }
+      }}
+      className="w-40 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-amber-400"
+      aria-label="Player name"
+    />
+  );
+};
 
 interface AdminPanelProps {
   currentSession: TryoutSession;
@@ -520,8 +550,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <td className="p-3 font-mono font-bold text-amber-500 dark:text-amber-400">
                             #{player.pinney_number}
                           </td>
-                          <td className="p-3 font-semibold text-slate-800 dark:text-white">
-                            {player.name}
+                          <td className="p-3">
+                            <PlayerNameInput
+                              name={player.name}
+                              onCommit={(name) => handleUpdatePlayer(player.id, { name })}
+                            />
                           </td>
                           <td className="p-3">
                             <select

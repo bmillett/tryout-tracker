@@ -43,7 +43,21 @@ const FEMALE_NAMES = [
   'Emma', 'Nora', 'Zoe', 'Ruby', 'Hana', 'Iris', 'Lena', 'Mira', 'Tess', 'Willa',
   'June', 'Cleo', 'Freya', 'Nadia', 'Sage', 'Piper', 'Anya', 'Maeve', 'Talia', 'Priya',
 ];
-const LAST_INITIALS = 'ABCDEFGHIJKLMNOPRSTW';
+// 40 distinct last names (7 is coprime with 40, so (i * 7) % 40 never repeats for i < 40).
+const LAST_NAMES = [
+  'Anderson', 'Baker', 'Campbell', 'Dawson', 'Edwards', 'Fraser', 'Graham', 'Hughes', 'Irving', 'Jensen',
+  'Kerr', 'Lawson', 'Murray', 'Nolan', 'Olsen', 'Patel', 'Quigley', 'Robertson', 'Singh', 'Thompson',
+  'Underhill', 'Vaughn', 'Walker', 'Young', 'Zimmer', 'Archer', 'Bennett', 'Chen', 'Dubois', 'Ellis',
+  'Foster', 'Gill', 'Harper', 'Ito', 'Jordan', 'Khan', 'Lopez', 'Nguyen', 'Ortega', 'Tremblay',
+];
+// Deliberate collisions (same first name + same last initial) to test full-name disambiguation:
+// "Alex M." (Martin / Moore) and "Sam R." (Reyes / Rossi).
+const COLLISIONS = {
+  12: ['Alex', 'Martin'],
+  14: ['Alex', 'Moore'],
+  13: ['Sam', 'Reyes'],
+  15: ['Sam', 'Rossi'],
+};
 
 /**
  * Deterministic generated roster for --count N (--count 40 -> 20 M, 20 F).
@@ -58,14 +72,15 @@ function generatePlayers(count, mixed) {
   for (let i = 0; i < count; i++) {
     const gender = mixed ? (i % 2 === 0 ? 'M' : 'F') : undefined;
     const pool = gender === 'F' ? FEMALE_NAMES : MALE_NAMES;
-    const first = pool[Math.floor(i / 2) % pool.length];
-    const last = LAST_INITIALS[(i * 7) % LAST_INITIALS.length];
+    let first = pool[Math.floor(i / 2) % pool.length];
+    let last = LAST_NAMES[(i * 7) % LAST_NAMES.length];
+    if (mixed && COLLISIONS[i]) [first, last] = COLLISIONS[i];
     let status = 'active';
     if (i === 5) status = 'injured';
     if (i === 17) status = 'absent';
     if (i === 29) status = 'no_need_to_watch';
     const p = {
-      name: `${first} ${last}.`,
+      name: `${first} ${last}`,
       pinney_number: i + 1,
       pinney_color: PINNEY_COLOR_NAMES[(i + Math.floor(i / 2)) % PINNEY_COLOR_NAMES.length],
       group_name: `Group ${String.fromCharCode(65 + Math.floor(i / 10))}`,

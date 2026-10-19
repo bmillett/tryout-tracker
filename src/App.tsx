@@ -50,7 +50,13 @@ export const App: React.FC = () => {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroupFilter, setSelectedGroupFilter] = useState('All');
-  const [selectedGenderFilter, setSelectedGenderFilter] = useState<'All' | 'M' | 'F'>('All');
+  // Gender toggles (mixed-gender teams): both on = show everyone; turning one off hides that gender.
+  const [genderShow, setGenderShow] = useState<{ M: boolean; F: boolean }>({ M: true, F: true });
+  const toggleGender = (g: 'M' | 'F') => {
+    const next = { ...genderShow, [g]: !genderShow[g] };
+    // Never allow both off (empty grid); reset to showing both instead.
+    setGenderShow(!next.M && !next.F ? { M: true, F: true } : next);
+  };
   const [onlyUnratedFilter, setOnlyUnratedFilter] = useState(false);
 
   // Show full player names on grid cards (per-device, per-team preference)
@@ -132,7 +138,11 @@ export const App: React.FC = () => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.pinney_number.toString().includes(searchQuery);
     const matchesGroup = selectedGroupFilter === 'All' || p.group_name === selectedGroupFilter;
-    const matchesGender = !team.mixed_gender || selectedGenderFilter === 'All' || p.gender === selectedGenderFilter;
+    const matchesGender =
+      !team.mixed_gender ||
+      (genderShow.M && genderShow.F) ||
+      (p.gender === 'M' && genderShow.M) ||
+      (p.gender === 'F' && genderShow.F);
 
     if (onlyUnratedFilter) {
       const ratedCount = evaluations.filter(e => e.player_id === p.id && e.evaluator_name === evaluatorName).length;
@@ -241,6 +251,7 @@ export const App: React.FC = () => {
           <div className="space-y-4">
             
             {/* Filter Bar */}
+            <div className="flex flex-col gap-2">
             <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
               {/* Search input */}
               <div className="relative w-full sm:w-80">
@@ -269,22 +280,26 @@ export const App: React.FC = () => {
                     {group}
                   </button>
                 ))}
+              </div>
+            </div>
 
-                {team.mixed_gender && (['All', 'M', 'F'] as const).map((g) => (
+            {/* Row 2: gender toggles + view options */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                {team.mixed_gender && (['M', 'F'] as const).map((g) => (
                   <button
                     key={g}
-                    onClick={() => setSelectedGenderFilter(g)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
-                      selectedGenderFilter === g
+                    onClick={() => toggleGender(g)}
+                    aria-pressed={genderShow[g]}
+                    title={genderShow[g] ? `Showing ${g}. Tap to hide.` : `Hiding ${g}. Tap to show.`}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition active:scale-95 ${
+                      genderShow[g]
                         ? g === 'M'
-                          ? 'bg-blue-500 text-white shadow-md'
-                          : g === 'F'
-                          ? 'bg-violet-500 text-white shadow-md'
-                          : 'bg-amber-400 text-slate-950 shadow-md'
-                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
+                          ? 'bg-blue-500 text-white border-blue-500 shadow-md'
+                          : 'bg-violet-500 text-white border-violet-500 shadow-md'
+                        : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 line-through border-slate-200 dark:border-slate-800'
                     }`}
                   >
-                    {g === 'All' ? 'All Genders' : g}
+                    {g}
                   </button>
                 ))}
 
@@ -310,7 +325,7 @@ export const App: React.FC = () => {
                 >
                   Unrated Only
                 </button>
-              </div>
+            </div>
             </div>
 
             {/* Evaluator Notice if Finalized */}
