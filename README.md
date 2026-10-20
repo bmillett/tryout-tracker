@@ -20,6 +20,12 @@ One deployment serves many teams. Each team gets its own URL (`/t/<slug>`), its 
 
 ---
 
+## Help guide
+
+End-user documentation for evaluators, coaches and super-admins is in [`HELP.md`](HELP.md).
+
+---
+
 ## Security model (read before deploying)
 
 The isolation level is **convenience**: anyone who knows a team URL (`/t/<slug>`) can access that team and see all evaluations. The coach PIN is stored plaintext in the team doc, readable by anyone who has the URL. This is intentional — the app is designed for sideline use where the audience is known.
@@ -54,7 +60,7 @@ Open the **root URL** (`/`) in a normal browser tab (not the installed PWA). You
 - **Create** a team: pick a slug (lowercase letters, digits and hyphens; 2–40 chars; reserved words `api`, `t`, `admin`, `assets` are blocked), set a display name, a 4–8 digit coach PIN, and the mixed-gender toggle.
 - **Edit** a team: change name, coach PIN or mixed-gender flag. The slug cannot be changed after creation.
 
-> **Note on PIN changes:** coaches cannot change their own PIN. All PIN changes go through the super-admin screen.
+> **Note on PIN changes:** coaches can change their own PIN from Settings → Cloud & Security (via `POST /api/team-pin`, which needs only the team slug). The super-admin screen can also reset any team's PIN. See [`coach-pin-security-options.md`](coach-pin-security-options.md) for ways to tighten this.
 
 ### Manual fallback (Firebase console)
 
@@ -213,14 +219,14 @@ Migration was **applied** to the production Firestore project (`tryout-tracker-4
 
 ## Coach / Admin access
 
-Evaluators open the team URL and enter their name to start rating players. Coaches click the ⚙️ icon or the **Roster Board** button and enter the coach PIN to unlock admin controls. The PIN is set per team in the super-admin screen (a 4–8 digit PIN is required when creating a team).
+Evaluators open the team URL and enter their name to start rating players. Coaches click the **Settings** or **Roster Board** button and enter the coach PIN to unlock admin controls. The PIN is set per team in the super-admin screen (a 4–8 digit PIN is required when creating a team) and can be changed by coaches under Settings → Cloud & Security.
 
 ---
 
 ## Known limitations
 
 - **Orphaned evaluations/notes after player delete:** deleting a player leaves that player's evaluations and notes in Firestore and IndexedDB. They are not shown in the UI but are not cleaned up.
-- **PIN changes require super-admin:** coaches cannot change their own PIN. All PIN changes go through the root super-admin screen.
+- **PIN changes are unauthenticated:** `POST /api/team-pin` lets anyone who knows a team slug change that team's PIN (no current-PIN check). The super-admin screen can reset it.
 - **Criteria sync but default seeds are local:** default criteria are seeded by `initDB()` on first load with deterministic IDs (`crit-<slug>-s1-<n>`). They are not pushed to Firestore by the seed. If an admin edits a criterion it is then synced and overwrites the local copy on other devices — this is the intended behavior.
 - **Exemplar input syncs on every keystroke:** each keystroke replaces the same queue item, so the queue does not grow, but there is no debounce.
 - **No real authentication:** anyone with a team URL can read and write that team's data. The coach PIN is stored plaintext in the team doc.
