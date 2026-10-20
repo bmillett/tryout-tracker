@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './services/db';
 import { SyncService } from './services/sync';
@@ -23,8 +23,12 @@ import {
   LogOut,
   Lock,
   Sun,
-  Moon
+  Moon,
+  HelpCircle
 } from 'lucide-react';
+
+// Loaded on demand so the markdown renderer isn't in the main bundle.
+const HelpPage = lazy(() => import('./components/HelpPage').then((m) => ({ default: m.HelpPage })));
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -42,7 +46,7 @@ export const App: React.FC = () => {
     return sessionStorage.getItem(`${team.slug}_admin_unlocked`) === 'true';
   });
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'evaluator' | 'leaderboard' | 'admin'>('evaluator');
+  const [currentView, setCurrentView] = useState<'evaluator' | 'leaderboard' | 'admin' | 'help'>('evaluator');
 
   // Scoring Sheet State
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -184,6 +188,20 @@ export const App: React.FC = () => {
           {/* Sync Badge & Actions */}
           <div className="flex items-center gap-2">
             <SyncStatusBadge />
+
+            {/* Help */}
+            <button
+              onClick={() => setCurrentView(currentView === 'help' ? 'evaluator' : 'help')}
+              className={`p-2 rounded-xl border transition ${
+                currentView === 'help'
+                  ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md'
+                  : 'bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white border-slate-200 dark:border-transparent'
+              }`}
+              title="Help"
+              aria-label="Help"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
 
             {/* Theme toggle */}
             <button
@@ -375,6 +393,13 @@ export const App: React.FC = () => {
             onSessionChange={(s) => setActiveSession(s)}
             onRefresh={() => {}}
           />
+        )}
+
+        {/* VIEW 4: HELP GUIDE (open to everyone) */}
+        {currentView === 'help' && (
+          <Suspense fallback={<p className="text-center text-xs text-slate-400 py-10">Loading help…</p>}>
+            <HelpPage onClose={() => setCurrentView('evaluator')} />
+          </Suspense>
         )}
 
         {/* VIEW 3: COACH ADMIN PANEL */}
