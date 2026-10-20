@@ -5,6 +5,7 @@ import { SyncService } from '../services/sync';
 import type { Player, Criterion, TryoutSession, PlayerStatus } from '../types';
 import { PINNEY_COLORS, NO_PINNEY_COLOR, getPinneyColor, DEFAULT_CRITERIA_TEMPLATES } from '../data/defaultData';
 import { useTeam } from '../context/TeamContext';
+import { cacheTeam } from '../services/team';
 import { normalizeGender } from './GenderBadge';
 import {
   Users,
@@ -73,7 +74,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'roster' | 'criteria' | 'sessions' | 'settings'>('roster');
   
-  const { mixed_gender } = useTeam();
+  const team = useTeam();
+  const { mixed_gender } = team;
 
   // New Player Form State
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -303,6 +305,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const lockedCount = players.filter(p => p.is_locked).length;
   const targetRoster = currentSession.target_roster_size || 22;
+
+  // Coach PIN setting
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinMsg, setPinMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleChangePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{4,8}$/.test(newPin)) {
+      setPinMsg({ ok: false, text: 'PIN must be 4–8 digits.' });
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setPinMsg({ ok: false, text: 'PINs do not match.' });
+      return;
+    }
+    setPinSaving(true);
+    setPinMsg(null);
+    try {
+      const res = await fetch('/api/team-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: team.slug, coach_pin: newPin })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setPinMsg({ ok: false, text: data.error || `Failed to update PIN (${res.status})` });
+        return;
+      }
+      // Update the cached team so the new PIN is used immediately, then reload
+      // to pick it up in the TeamContext.
+      cacheTeam({ ...team, coach_pin: newPin });
+      setPinMsg({ ok: true, text: 'Coach PIN updated. Reloading…' });
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      setPinMsg({ ok: false, text: err instanceof Error ? err.message : 'Network error' });
+    } finally {
+      setPinSaving(false);
+    }
+  };
 
   // Target roster size setting (edits commit on blur / Enter)
   const [targetRosterInput, setTargetRosterInput] = useState(String(targetRoster));
@@ -932,6 +975,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               aria-label="Target roster size"
             />
           </div>
+
+          <form
+            onSubmit={handleChangePin}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm"
+          >
+            <div className="flex items-center gap-2 text-slate-800 dark:text-white font-semibold text-sm mb-2">
+              <Lock className="w-5 h-5 text-amber-500" />
+              <span>Change Coach PIN</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Set a new 4–8 digit PIN for this team. It takes effect on all devices the next time they load the team.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="password"
+                inputMode="numeric"
+                autoComplete="new-password"
+                placeholder="New PIN"
+                value={newPin}
+                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                className={`${inputCls} w-32`}
+                aria-label="New coach PIN"
+              />
+              <input
+                type="password"
+                inputMode="numeric"
+                autoComplete="new-password"
+                placeholder="Confirm PIN"
+                value={confirmPin}
+                onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                className={`${inputCls} w-32`}
+                aria-label="Confirm new coach PIN"
+              />
+              <button
+                type="submit"
+                disabled={pinSaving || !newPin || !confirmPin}
+                className="px-4 py-2 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl transition"
+              >
+                {pinSaving ? 'Saving…' : 'Update PIN'}
+              </button>
+            </div>
+            {pinMsg && (
+              <p className={`text-xs mt-2 ${pinMsg.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                {pinMsg.text}
+              </p>
+            )}
+          </form>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-2 text-slate-800 dark:text-white font-semibold text-sm mb-2">
