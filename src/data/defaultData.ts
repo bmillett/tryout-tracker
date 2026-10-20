@@ -141,10 +141,29 @@ export const PINNEY_COLORS = [
   { name: 'Green', hex: '#16a34a', text: 'text-white', border: 'border-green-600', bg: 'bg-green-600' },
   { name: 'Yellow / Gold', hex: '#eab308', text: 'text-slate-950', border: 'border-yellow-500', bg: 'bg-yellow-400' },
   { name: 'Orange', hex: '#f97316', text: 'text-white', border: 'border-orange-500', bg: 'bg-orange-500' },
-  { name: 'Purple', hex: '#9333ea', text: 'text-white', border: 'border-purple-600', bg: 'bg-purple-600' },
-  { name: 'Pink', hex: '#ec4899', text: 'text-white', border: 'border-pink-500', bg: 'bg-pink-500' },
-  { name: 'Teal', hex: '#0d9488', text: 'text-white', border: 'border-teal-500', bg: 'bg-teal-600' },
+  { name: 'Pink / Purple', hex: '#c026d3', text: 'text-white', border: 'border-fuchsia-500', bg: 'bg-fuchsia-600' },
+  { name: 'N/A', hex: '#6b7280', text: 'text-white', border: 'border-gray-400', bg: 'bg-gray-500' },
 ];
+
+// Pinney color used when none is set.
+export const NO_PINNEY_COLOR = 'N/A';
+
+// Old color names that were merged or removed; they map to current entries.
+const LEGACY_PINNEY_COLORS: Record<string, string> = {
+  purple: 'Pink / Purple',
+  pink: 'Pink / Purple',
+};
+
+// Resolves a stored color name to a PINNEY_COLORS entry. Blank, unknown, or
+// removed colors (e.g. Teal) resolve to N/A (grey).
+export function getPinneyColor(name?: string) {
+  const key = (name || '').trim().toLowerCase();
+  const resolved = LEGACY_PINNEY_COLORS[key] || key;
+  return (
+    PINNEY_COLORS.find(c => c.name.toLowerCase() === resolved) ||
+    PINNEY_COLORS.find(c => c.name === NO_PINNEY_COLOR)!
+  );
+}
 
 export const INITIAL_SAMPLE_PLAYERS: Omit<Player, 'id' | 'session_id'>[] = [
   { name: 'Kian M.', pinney_number: 7, pinney_color: 'Navy / Blue', group_name: 'Group A', is_locked: true, status: 'active' },

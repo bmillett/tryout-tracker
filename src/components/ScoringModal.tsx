@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '../types';
-import { PINNEY_COLORS, PRESET_NOTE_TAGS } from '../data/defaultData';
+import { getPinneyColor, PRESET_NOTE_TAGS } from '../data/defaultData';
 import { SyncService } from '../services/sync';
 import { useTeam } from '../context/TeamContext';
 import { GenderBadge } from './GenderBadge';
@@ -56,7 +56,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
   const [selectedTag, setSelectedTag] = useState('');
 
   const { mixed_gender } = useTeam();
-  const pinney = PINNEY_COLORS.find(c => c.name.toLowerCase() === player.pinney_color.toLowerCase()) || PINNEY_COLORS[0];
+  const pinney = getPinneyColor(player.pinney_color);
   const isFinalized = session.status === 'finalized';
 
   // Build lookup map for scores

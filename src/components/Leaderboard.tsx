@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '../types';
-import { PINNEY_COLORS } from '../data/defaultData';
+import { getPinneyColor } from '../data/defaultData';
 import { db } from '../services/db';
 import { SyncService } from '../services/sync';
 import { useTeam } from '../context/TeamContext';
@@ -136,7 +136,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       const row: Record<string, string | number> = {
         'Jersey #': player.pinney_number,
         'Name': player.name,
-        'Pinney Color': player.pinney_color,
+        'Pinney Color': getPinneyColor(player.pinney_color).name,
         'Group': player.group_name,
         'Status': player.status,
         'Locked': player.is_locked ? 'YES' : 'NO',
@@ -329,7 +329,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
               {filtered.map(({ player, overallAvg, offAvg, defAvg, evalCount, evaluatorCount }, idx) => {
-                const pinney = PINNEY_COLORS.find(c => c.name.toLowerCase() === player.pinney_color.toLowerCase()) || PINNEY_COLORS[0];
+                const pinney = getPinneyColor(player.pinney_color);
                 const isWithinTarget22 = idx < targetSpots;
 
                 return (
@@ -360,7 +360,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                               </span>
                             )}
                           </div>
-                          <span className="text-[10px] text-slate-400">{player.pinney_color}</span>
+                          <span className="text-[10px] text-slate-400">{pinney.name}</span>
                         </div>
                       </div>
                     </td>
@@ -449,7 +449,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   {mixed_gender && selectedPlayerForDetail.gender && <GenderBadge gender={selectedPlayerForDetail.gender} />}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  #{selectedPlayerForDetail.pinney_number} • {selectedPlayerForDetail.pinney_color} • {selectedPlayerForDetail.group_name}
+                  #{selectedPlayerForDetail.pinney_number} • {getPinneyColor(selectedPlayerForDetail.pinney_color).name} • {selectedPlayerForDetail.group_name}
                 </p>
               </div>
               <button

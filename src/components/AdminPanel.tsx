@@ -3,7 +3,7 @@ import Papa from 'papaparse';
 import { db } from '../services/db';
 import { SyncService } from '../services/sync';
 import type { Player, Criterion, TryoutSession, PlayerStatus } from '../types';
-import { PINNEY_COLORS, DEFAULT_CRITERIA_TEMPLATES } from '../data/defaultData';
+import { PINNEY_COLORS, NO_PINNEY_COLOR, getPinneyColor, DEFAULT_CRITERIA_TEMPLATES } from '../data/defaultData';
 import { useTeam } from '../context/TeamContext';
 import { normalizeGender } from './GenderBadge';
 import {
@@ -78,7 +78,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // New Player Form State
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerNum, setNewPlayerNum] = useState<number | ''>('');
-  const [newPlayerColor, setNewPlayerColor] = useState('Navy / Blue');
+  const [newPlayerColor, setNewPlayerColor] = useState(NO_PINNEY_COLOR);
   const [newPlayerGroup, setNewPlayerGroup] = useState('Group A');
   const [newPlayerGender, setNewPlayerGender] = useState<'M' | 'F' | ''>('');
 
@@ -117,7 +117,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         rows.forEach((row, idx) => {
           const name = row['Name'] || row['name'] || row['Player'] || `Player ${idx + 1}`;
           const num = parseInt(row['Number'] || row['number'] || row['Jersey'] || row['#'] || `${idx + 1}`, 10) || (idx + 1);
-          const color = row['PinneyColor'] || row['Color'] || row['color'] || 'Navy / Blue';
+          const color = getPinneyColor(row['PinneyColor'] || row['Color'] || row['color']).name;
           const group = row['Group'] || row['group'] || 'Group A';
           const gender = normalizeGender(row['Gender'] || row['gender']);
 
@@ -126,7 +126,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             session_id: currentSession.id,
             name: name.trim(),
             pinney_number: num,
-            pinney_color: color.trim(),
+            pinney_color: color,
             group_name: group.trim(),
             is_locked: false,
             status: 'active'
@@ -576,7 +576,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </td>
                           <td className="p-3">
                             <select
-                              value={player.pinney_color}
+                              value={getPinneyColor(player.pinney_color).name}
                               onChange={(e) => handleUpdatePlayer(player.id, { pinney_color: e.target.value })}
                               className="bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none text-slate-700 dark:text-slate-200"
                             >
