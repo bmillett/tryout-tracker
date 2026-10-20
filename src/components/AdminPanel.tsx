@@ -304,6 +304,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const lockedCount = players.filter(p => p.is_locked).length;
   const targetRoster = currentSession.target_roster_size || 22;
 
+  // Target roster size setting (edits commit on blur / Enter)
+  const [targetRosterInput, setTargetRosterInput] = useState(String(targetRoster));
+  useEffect(() => { setTargetRosterInput(String(targetRoster)); }, [targetRoster]);
+
+  const commitTargetRoster = async () => {
+    const n = Math.floor(Number(targetRosterInput));
+    if (!Number.isFinite(n) || n < 1) { setTargetRosterInput(String(targetRoster)); return; }
+    setTargetRosterInput(String(n));
+    if (n === targetRoster) return;
+    await db.sessions.update(currentSession.id, { target_roster_size: n });
+    const updated = { ...currentSession, target_roster_size: n };
+    await SyncService.syncSession(updated);
+    onSessionChange(updated);
+    onRefresh();
+    setSaveSuccess(`Target roster size set to ${n}`);
+    setTimeout(() => setSaveSuccess(''), 3000);
+  };
+
   // shared input class
   const inputCls = 'bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 outline-none focus:border-amber-400';
   const selectCls = `${inputCls}`;
@@ -894,6 +912,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* TAB 4: SETTINGS */}
       {activeTab === 'settings' && (
         <div className="space-y-6 max-w-xl">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-slate-800 dark:text-white font-semibold text-sm mb-2">
+              <Users className="w-5 h-5 text-amber-500" />
+              <span>Target Roster Size</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Number of spots to fill on the final roster for this session. Used by the roster board and leaderboard.
+            </p>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={targetRosterInput}
+              onChange={(e) => setTargetRosterInput(e.target.value)}
+              onBlur={commitTargetRoster}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              className={`${inputCls} w-24`}
+              aria-label="Target roster size"
+            />
+          </div>
+
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-2 text-slate-800 dark:text-white font-semibold text-sm mb-2">
               <Flame className="w-5 h-5 text-amber-500" />
