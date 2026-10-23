@@ -117,7 +117,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         const playersToAdd: Player[] = [];
 
         rows.forEach((row, idx) => {
-          const name = row['Name'] || row['name'] || row['Player'] || `Player ${idx + 1}`;
+          const firstName = row['FirstName'] || row['First Name'] || row['firstname'] || '';
+          const lastName = row['LastName'] || row['Last Name'] || row['lastname'] || '';
+          const combinedName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : '';
+          const name = row['Name'] || row['name'] || row['Player'] || combinedName || `Player ${idx + 1}`;
           const num = parseInt(row['Number'] || row['number'] || row['Jersey'] || row['#'] || `${idx + 1}`, 10) || (idx + 1);
           const color = getPinneyColor(row['PinneyColor'] || row['Color'] || row['color']).name;
           const group = row['Group'] || row['group'] || 'Group A';
@@ -506,6 +509,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                   Upload .csv with columns: <code className="text-slate-600 dark:text-slate-300">Name, Number, PinneyColor, Group{mixed_gender ? ', Gender' : ''}</code>
+                  <span className="block mt-0.5 text-slate-400 dark:text-slate-500">Or use <code className="text-slate-500 dark:text-slate-400">FirstName, LastName</code> instead of <code className="text-slate-500 dark:text-slate-400">Name</code>. PinneyColor is optional.</span>
                   {mixed_gender && <span className="block mt-0.5 text-slate-400 dark:text-slate-500">Gender accepts: M / Male / Men / Man (and F equivalents), case-insensitive.</span>}
                 </p>
               </div>
