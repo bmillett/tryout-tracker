@@ -167,6 +167,13 @@ export const App: React.FC = () => {
     return matchesSearch && matchesGroup && matchesGender;
   });
 
+  // Active players first, then injured/absent/no_need_to_watch
+  filteredPlayers.sort((a, b) => {
+    const aActive = a.status === 'active' ? 0 : 1;
+    const bActive = b.status === 'active' ? 0 : 1;
+    return aActive - bActive;
+  });
+
   const groups = ['All', ...Array.from(new Set(players.map(p => p.group_name || 'Group A')))];
   const selectedPlayerIndex = selectedPlayer ? filteredPlayers.findIndex(p => p.id === selectedPlayer.id) : -1;
 
