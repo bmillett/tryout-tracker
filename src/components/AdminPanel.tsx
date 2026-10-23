@@ -197,6 +197,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
+  // Clear All Players
+  const handleClearAllPlayers = async () => {
+    if (players.length === 0) return;
+    if (!confirm(`Remove all ${players.length} players from this session? This cannot be undone.`)) return;
+    for (const p of players) {
+      await SyncService.deletePlayer(p.id);
+    }
+    onRefresh();
+  };
+
   // Add Criterion
   const handleAddCriterion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -584,7 +594,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <h3 className="font-bold text-slate-800 dark:text-white text-sm">Active Tryout Players ({players.length})</h3>
-              <span className="text-xs text-slate-400 dark:text-slate-400">Click color or status to modify live</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-400 dark:text-slate-400">Click color or status to modify live</span>
+                {players.length > 0 && (
+                  <button
+                    onClick={handleClearAllPlayers}
+                    className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="overflow-x-auto">
