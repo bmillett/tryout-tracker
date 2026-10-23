@@ -113,43 +113,72 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        const rows = results.data as any[];
-        const playersToAdd: Player[] = [];
+      const rows = results.data as any[];
 
-        rows.forEach((row, idx) => {
-          const firstName = row['FirstName'] || row['First Name'] || row['firstname'] || '';
-          const lastName = row['LastName'] || row['Last Name'] || row['lastname'] || '';
-          const combinedName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : '';
-          const name = row['Name'] || row['name'] || row['Player'] || combinedName || `Player ${idx + 1}`;
-          const num = parseInt(row['Number'] || row['number'] || row['Jersey'] || row['#'] || `${idx + 1}`, 10) || (idx + 1);
-          const color = getPinneyColor(row['PinneyColor'] || row['Color'] || row['color']).name;
-          const group = row['Group'] || row['group'] || 'Group A';
-          const gender = normalizeGender(row['Gender'] || row['gender']);
+      // Load existing players for this session to dedup
+      const existing = await db.players.where('session_id').equals(currentSession.id).toArray();
 
+      let added = 0, updated = 0;
+      for (const [idx, row] of rows.entries()) {
+        const firstName = row['FirstName'] || row['First Name'] || row['firstname'] || '';
+        const lastName = row['LastName'] || row['Last Name'] || row['lastname'] || '';
+        const combinedName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : '';
+        const name = (row['Name'] || row['name'] || row['Player'] || combinedName || `Player ${idx + 1}`).trim();
+        const rawNum = parseInt(row['Number'] || row['number'] || row['Jersey'] || row['#'] || '', 10);
+        const num = Number.isFinite(rawNum) ? rawNum : idx + 1;
+        const hasExplicitNumber = Number.isFinite(rawNum);
+        const color = getPinneyColor(row['PinneyColor'] || row['Color'] || row['color']).name;
+        const group = (row['Group'] || row['group'] || 'Group A').trim();
+        const gender = normalizeGender(row['Gender'] || row['gender']);
+
+        // Match by name (case-insensitive); also require jersey number match when one is provided
+        const nameLower = name.toLowerCase();
+        const match = existing.find(p => {
+          const nameMatch = p.name.toLowerCase() === nameLower;
+          if (!nameMatch) return false;
+          return !hasExplicitNumber || p.pinney_number === num;
+        });
+
+        if (match) {
+          // Upsert: update mutable fields, preserve status/is_locked/id
+          const updatedPlayer: Player = {
+            ...match,
+            pinney_number: num,
+            pinney_color: color,
+            group_name: group,
+            ...(gender ? { gender } : {})
+          };
+          await SyncService.syncPlayer(updatedPlayer);
+          // Keep existing[] in sync so later rows in the same file don't re-match stale data
+          existing.splice(existing.indexOf(match), 1, updatedPlayer);
+          updated++;
+        } else {
           const player: Player = {
             id: `player_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
             session_id: currentSession.id,
-            name: name.trim(),
+            name,
             pinney_number: num,
             pinney_color: color,
-            group_name: group.trim(),
+            group_name: group,
             is_locked: false,
             status: 'active'
           };
           if (gender) player.gender = gender;
-          playersToAdd.push(player);
-        });
-
-        if (playersToAdd.length > 0) {
-          await db.players.bulkAdd(playersToAdd);
-          // Sync each imported player to Firestore
-          for (const p of playersToAdd) {
-            await SyncService.syncPlayer(p);
-          }
-          onRefresh();
-          setSaveSuccess(`Imported ${playersToAdd.length} players successfully!`);
-          setTimeout(() => setSaveSuccess(''), 3000);
+          await db.players.add(player);
+          await SyncService.syncPlayer(player);
+          existing.push(player);
+          added++;
         }
+      }
+
+      if (added > 0 || updated > 0) {
+        onRefresh();
+        const parts = [];
+        if (added > 0) parts.push(`${added} added`);
+        if (updated > 0) parts.push(`${updated} updated`);
+        setSaveSuccess(`CSV import: ${parts.join(', ')}.`);
+        setTimeout(() => setSaveSuccess(''), 3000);
+      }
       }
     });
   };
