@@ -11,7 +11,6 @@ import {
   Unlock,
   Download,
   Search,
-  ChevronRight,
   ArrowUpDown
 } from 'lucide-react';
 
@@ -350,7 +349,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="p-3.5 text-center w-12">Rank</th>
                 <th className="p-3.5">Player</th>
                 <th className="p-3.5 text-center">Group</th>
                 <th className="p-3.5 text-center">Overall</th>
@@ -358,7 +356,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <th className="p-3.5 text-center hidden md:table-cell">Defense</th>
                 <th className="p-3.5 text-center hidden sm:table-cell">Evaluators</th>
                 <th className="p-3.5 text-center">Lock Spot</th>
-                <th className="p-3.5 text-right">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
@@ -372,7 +369,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 return (
                   <tr
                     key={player.id}
-                    className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                    onClick={() => setSelectedPlayerForDetail(player)}
+                    className={`cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
                       isDimmed
                         ? 'bg-slate-50 dark:bg-slate-950/60 opacity-60'
                         : player.is_locked
@@ -382,11 +380,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         : 'bg-slate-50 dark:bg-slate-950/40 opacity-80'
                     }`}
                   >
-                    {/* Rank */}
-                    <td className="p-3.5 text-center font-mono font-bold text-slate-400">
-                      {idx + 1}
-                    </td>
-
                     {/* Player Info */}
                     <td className="p-3.5">
                       <div className="flex items-center gap-2.5">
@@ -417,6 +410,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         <select
                           value={player.status}
                           onChange={(e) => handleUpdateStatus(player, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
                           className={`text-[10px] font-semibold rounded-lg px-1.5 py-0.5 border outline-none cursor-pointer ${
                             player.status === 'active'
                               ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-400'
@@ -474,7 +468,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     {/* 1-Click Lock Toggle */}
                     <td className="p-3.5 text-center">
                       <button
-                        onClick={() => handleToggleLock(player)}
+                        onClick={(e) => { e.stopPropagation(); handleToggleLock(player); }}
                         className={`p-2 rounded-xl border transition ${
                           player.is_locked
                             ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
@@ -486,16 +480,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       </button>
                     </td>
 
-                    {/* Details Drawer Trigger */}
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => setSelectedPlayerForDetail(player)}
-                        className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition text-xs flex items-center gap-1 ml-auto"
-                      >
-                        <span>Inspect</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
                   </tr>
                 );
               })}
