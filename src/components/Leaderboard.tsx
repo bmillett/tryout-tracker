@@ -37,7 +37,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const { mixed_gender, slug: teamSlug } = useTeam();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<'overall' | 'offense' | 'defense' | 'intangibles' | 'number'>('overall');
+  const [sortBy, setSortBy] = useState<'overall' | 'offense' | 'defense' | 'intangibles' | 'number' | 'status'>('overall');
   const [selectedPlayerForDetail, setSelectedPlayerForDetail] = useState<Player | null>(null);
 
   const targetSpots = session.target_roster_size || 22;
@@ -105,19 +105,34 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return matchesSearch && matchesGroup;
   });
 
-  filtered.sort((a, b) => {
-    // Non-active players (cut, injured, etc.) always sink to the bottom
-    const aInactive = a.player.status !== 'active';
-    const bInactive = b.player.status !== 'active';
-    if (aInactive && !bInactive) return 1;
-    if (!aInactive && bInactive) return -1;
+  // Priority tier: locked+NNTW=0, locked=1, active=2, NNTW=3, injured/absent=4, cut=5
+  const statusTier = (p: Player): number => {
+    const locked = p.is_locked;
+    const nntw = p.status === 'no_need_to_watch';
+    if (locked && nntw) return 0;
+    if (locked) return 1;
+    if (p.status === 'active') return 2;
+    if (nntw) return 3;
+    if (p.status === 'injured' || p.status === 'absent') return 4;
+    return 5; // cut_moved_down
+  };
 
-    // Locked players stay pinned at the top if sorting by overall
-    if (sortBy === 'overall') {
-      if (a.player.is_locked && !b.player.is_locked) return -1;
-      if (!a.player.is_locked && b.player.is_locked) return 1;
-      return b.overallAvg - a.overallAvg;
-    }
+  filtered.sort((a, b) => {
+    const aTier = statusTier(a.player);
+    const bTier = statusTier(b.player);
+
+    // Tiers 0-1 always float to top; tiers 3-5 always sink to bottom
+    if (aTier <= 1 && bTier > 1) return -1;
+    if (bTier <= 1 && aTier > 1) return 1;
+    if (aTier >= 3 && bTier <= 2) return 1;
+    if (bTier >= 3 && aTier <= 2) return -1;
+
+    // Within the "inactive" bucket, sort by tier so cut is below injured/absent/NNTW
+    if (aTier >= 3 && bTier >= 3) return aTier - bTier;
+
+    // Within the "active" bucket (tier 2), apply selected sort
+    if (sortBy === 'status') return aTier - bTier;
+    if (sortBy === 'overall') return b.overallAvg - a.overallAvg;
     if (sortBy === 'offense') return b.offAvg - a.offAvg;
     if (sortBy === 'defense') return b.defAvg - a.defAvg;
     if (sortBy === 'intangibles') return b.intAvg - a.intAvg;
@@ -305,7 +320,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             { id: 'offense', label: 'Offense' },
             { id: 'defense', label: 'Defense' },
             { id: 'intangibles', label: 'Intangibles' },
-            { id: 'number', label: 'Jersey #' }
+            { id: 'number', label: 'Jersey #' },
+            { id: 'status', label: 'Status' }
           ].map(s => (
             <button
               key={s.id}
@@ -343,13 +359,15 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               {filtered.map(({ player, overallAvg, offAvg, defAvg, evalCount, evaluatorCount }, idx) => {
                 const pinney = getPinneyColor(player.pinney_color);
                 const isWithinTarget22 = idx < targetSpots;
-                const isNonActive = player.status !== 'active';
+                const tier = statusTier(player);
+                const isDimmed = tier >= 3;   // NNTW-only, injured, absent, cut
+                const isCut = player.status === 'cut_moved_down';
 
                 return (
                   <tr
                     key={player.id}
                     className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
-                      isNonActive
+                      isDimmed
                         ? 'bg-slate-50 dark:bg-slate-950/60 opacity-60'
                         : player.is_locked
                         ? 'bg-amber-50 dark:bg-amber-500/5'
@@ -370,7 +388,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                           {player.pinney_number}
                         </span>
                         <div>
-                          <div className={`font-bold text-sm flex items-center gap-1.5 ${isNonActive ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
+                          <div className={`font-bold text-sm flex items-center gap-1.5 ${isCut ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
                             <span>{player.name}</span>
                             {mixed_gender && player.gender && <GenderBadge gender={player.gender} />}
                             {player.is_locked && (
