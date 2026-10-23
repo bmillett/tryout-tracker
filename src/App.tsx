@@ -99,11 +99,22 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (sessions.length > 0 && !activeSession) {
-      const active = sessions.find(s => s.status === 'active') || sessions[0];
-      setActiveSession(active);
+    if (sessions.length === 0) return;
+    if (!activeSession) {
+      // First load: pick the active session (or first)
+      setActiveSession(sessions.find(s => s.status === 'active') || sessions[0]);
+    } else {
+      // Already have a session — keep it in sync if Firestore updated it
+      const refreshed = sessions.find(s => s.id === activeSession.id);
+      if (refreshed && (
+        refreshed.target_roster_size !== activeSession.target_roster_size ||
+        refreshed.status !== activeSession.status ||
+        refreshed.name !== activeSession.name
+      )) {
+        setActiveSession(refreshed);
+      }
     }
-  }, [sessions, activeSession]);
+  }, [sessions]);
 
   const handleAdminClick = () => {
     if (isAdminUnlocked) {
