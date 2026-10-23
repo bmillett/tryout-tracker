@@ -37,7 +37,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const { mixed_gender, slug: teamSlug } = useTeam();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<'overall' | 'offense' | 'defense' | 'intangibles' | 'number' | 'status'>('overall');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'overall' | 'offense' | 'defense' | 'intangibles' | 'number'>('overall');
   const [selectedPlayerForDetail, setSelectedPlayerForDetail] = useState<Player | null>(null);
 
   const targetSpots = session.target_roster_size || 22;
@@ -97,41 +98,32 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     };
   });
 
+  // Locked first, then active, then inactive (by tier within inactive bucket)
+  const statusTier = (p: Player): number => {
+    if (p.is_locked) return 0;
+    if (p.status === 'active') return 1;
+    if (p.status === 'no_need_to_watch') return 2;
+    if (p.status === 'injured' || p.status === 'absent') return 3;
+    return 4; // cut_moved_down
+  };
+
   // Filter & Sort
   const filtered = playerStats.filter(({ player }) => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           player.pinney_number.toString().includes(searchQuery);
     const matchesGroup = selectedGroup === 'All' || player.group_name === selectedGroup;
-    return matchesSearch && matchesGroup;
+    const matchesStatus =
+      selectedStatus === 'all' ||
+      (selectedStatus === 'locked' && player.is_locked) ||
+      player.status === selectedStatus;
+    return matchesSearch && matchesGroup && matchesStatus;
   });
-
-  // Priority tier: locked+NNTW=0, locked=1, active=2, NNTW=3, injured/absent=4, cut=5
-  const statusTier = (p: Player): number => {
-    const locked = p.is_locked;
-    const nntw = p.status === 'no_need_to_watch';
-    if (locked && nntw) return 0;
-    if (locked) return 1;
-    if (p.status === 'active') return 2;
-    if (nntw) return 3;
-    if (p.status === 'injured' || p.status === 'absent') return 4;
-    return 5; // cut_moved_down
-  };
 
   filtered.sort((a, b) => {
     const aTier = statusTier(a.player);
     const bTier = statusTier(b.player);
-
-    // Tiers 0-1 always float to top; tiers 3-5 always sink to bottom
-    if (aTier <= 1 && bTier > 1) return -1;
-    if (bTier <= 1 && aTier > 1) return 1;
-    if (aTier >= 3 && bTier <= 2) return 1;
-    if (bTier >= 3 && aTier <= 2) return -1;
-
-    // Within the "inactive" bucket, sort by tier so cut is below injured/absent/NNTW
-    if (aTier >= 3 && bTier >= 3) return aTier - bTier;
-
-    // Within the "active" bucket (tier 2), apply selected sort
-    if (sortBy === 'status') return aTier - bTier;
+    if (aTier !== bTier) return aTier - bTier;
+    // Within same tier, apply selected sort
     if (sortBy === 'overall') return b.overallAvg - a.overallAvg;
     if (sortBy === 'offense') return b.offAvg - a.offAvg;
     if (sortBy === 'defense') return b.defAvg - a.defAvg;
@@ -292,21 +284,36 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             />
           </div>
 
-          {/* Group Filter */}
-          <div className="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
-            {groups.map(grp => (
-              <button
-                key={grp}
-                onClick={() => setSelectedGroup(grp)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                  selectedGroup === grp
-                    ? 'bg-amber-400 text-slate-950 font-bold'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                {grp}
-              </button>
-            ))}
+          {/* Group Filter + Status Filter */}
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {groups.map(grp => (
+                <button
+                  key={grp}
+                  onClick={() => setSelectedGroup(grp)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                    selectedGroup === grp
+                      ? 'bg-amber-400 text-slate-950 font-bold'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                  }`}
+                >
+                  {grp}
+                </button>
+              ))}
+            </div>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 outline-none cursor-pointer shrink-0"
+            >
+              <option value="all">All Statuses</option>
+              <option value="locked">Locked</option>
+              <option value="active">Active</option>
+              <option value="no_need_to_watch">No Need to Watch</option>
+              <option value="injured">Injured</option>
+              <option value="absent">Absent</option>
+              <option value="cut_moved_down">Cut / Moved Down</option>
+            </select>
           </div>
         </div>
 
@@ -320,8 +327,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             { id: 'offense', label: 'Offense' },
             { id: 'defense', label: 'Defense' },
             { id: 'intangibles', label: 'Intangibles' },
-            { id: 'number', label: 'Jersey #' },
-            { id: 'status', label: 'Status' }
+            { id: 'number', label: 'Jersey #' }
           ].map(s => (
             <button
               key={s.id}
