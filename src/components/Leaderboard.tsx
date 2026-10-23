@@ -99,14 +99,19 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
   // Filter & Sort
   const filtered = playerStats.filter(({ player }) => {
-    if (player.status === 'cut_moved_down') return false;
-    const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           player.pinney_number.toString().includes(searchQuery);
     const matchesGroup = selectedGroup === 'All' || player.group_name === selectedGroup;
     return matchesSearch && matchesGroup;
   });
 
   filtered.sort((a, b) => {
+    // Non-active players (cut, injured, etc.) always sink to the bottom
+    const aInactive = a.player.status !== 'active';
+    const bInactive = b.player.status !== 'active';
+    if (aInactive && !bInactive) return 1;
+    if (!aInactive && bInactive) return -1;
+
     // Locked players stay pinned at the top if sorting by overall
     if (sortBy === 'overall') {
       if (a.player.is_locked && !b.player.is_locked) return -1;
@@ -123,6 +128,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const handleToggleLock = async (player: Player) => {
     const updated = { ...player, is_locked: !player.is_locked };
     await db.players.update(player.id, { is_locked: updated.is_locked });
+    await SyncService.syncPlayer(updated);
+    onRefresh();
+  };
+
+  const handleUpdateStatus = async (player: Player, status: string) => {
+    const updated = { ...player, status: status as Player['status'] };
+    await db.players.update(player.id, { status: updated.status });
     await SyncService.syncPlayer(updated);
     onRefresh();
   };
@@ -331,12 +343,19 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               {filtered.map(({ player, overallAvg, offAvg, defAvg, evalCount, evaluatorCount }, idx) => {
                 const pinney = getPinneyColor(player.pinney_color);
                 const isWithinTarget22 = idx < targetSpots;
+                const isNonActive = player.status !== 'active';
 
                 return (
                   <tr
                     key={player.id}
                     className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
-                      player.is_locked ? 'bg-amber-50 dark:bg-amber-500/5' : isWithinTarget22 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-950/40 opacity-80'
+                      isNonActive
+                        ? 'bg-slate-50 dark:bg-slate-950/60 opacity-60'
+                        : player.is_locked
+                        ? 'bg-amber-50 dark:bg-amber-500/5'
+                        : isWithinTarget22
+                        ? 'bg-white dark:bg-slate-900'
+                        : 'bg-slate-50 dark:bg-slate-950/40 opacity-80'
                     }`}
                   >
                     {/* Rank */}
@@ -351,7 +370,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                           {player.pinney_number}
                         </span>
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
+                          <div className={`font-bold text-sm flex items-center gap-1.5 ${isNonActive ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
                             <span>{player.name}</span>
                             {mixed_gender && player.gender && <GenderBadge gender={player.gender} />}
                             {player.is_locked && (
@@ -365,11 +384,34 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       </div>
                     </td>
 
-                    {/* Group */}
+                    {/* Group + Status */}
                     <td className="p-3.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {player.group_name}
-                      </span>
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {player.group_name}
+                        </span>
+                        <select
+                          value={player.status}
+                          onChange={(e) => handleUpdateStatus(player, e.target.value)}
+                          className={`text-[10px] font-semibold rounded-lg px-1.5 py-0.5 border outline-none cursor-pointer ${
+                            player.status === 'active'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-400'
+                              : player.status === 'no_need_to_watch'
+                              ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-300 dark:border-sky-700/50 text-sky-700 dark:text-sky-400'
+                              : player.status === 'injured'
+                              ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-700/50 text-amber-700 dark:text-amber-400'
+                              : player.status === 'absent'
+                              ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'
+                              : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-700/50 text-rose-700 dark:text-rose-400'
+                          }`}
+                        >
+                          <option value="active">Active</option>
+                          <option value="no_need_to_watch">No Need to Watch</option>
+                          <option value="injured">Injured</option>
+                          <option value="absent">Absent</option>
+                          <option value="cut_moved_down">Cut / Moved Down</option>
+                        </select>
+                      </div>
                     </td>
 
                     {/* Overall Score */}
