@@ -302,7 +302,7 @@ export const App: React.FC = () => {
               </div>
 
               {/* Drill Group Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
+              <div className="scroll-x-touch flex items-center gap-1.5 w-full sm:w-auto pb-1">
                 {groups.map((group) => (
                   <button
                     key={group}
@@ -320,7 +320,7 @@ export const App: React.FC = () => {
             </div>
 
             {/* Row 2: gender toggles + view options */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <div className="scroll-x-touch flex items-center gap-1.5 pb-1">
                 {team.mixed_gender && (['M', 'F'] as const).map((g) => (
                   <button
                     key={g}

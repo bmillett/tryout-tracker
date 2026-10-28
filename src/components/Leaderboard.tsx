@@ -285,7 +285,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
           {/* Group Filter + Status Filter */}
           <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
+            <div className="scroll-x-touch flex gap-1.5 pb-1">
               {groups.map(grp => (
                 <button
                   key={grp}
@@ -317,7 +317,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         </div>
 
         {/* Sort by Tabs */}
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/80 overflow-x-auto">
+        <div className="scroll-x-touch flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
           <span className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1 shrink-0">
             <ArrowUpDown className="w-3 h-3" /> Sort by:
           </span>

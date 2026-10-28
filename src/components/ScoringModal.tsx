@@ -173,7 +173,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
         </div>
 
         {/* Category Tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 px-4 bg-slate-50/50 dark:bg-slate-900/50 gap-2 overflow-x-auto shrink-0 py-2">
+        <div className="scroll-x-touch flex border-b border-slate-200 dark:border-slate-800 px-4 bg-slate-50/50 dark:bg-slate-900/50 gap-2 shrink-0 py-2">
           {(['Offense', 'Defense', 'Athleticism & Intangibles', 'Notes'] as const).map((tab) => {
             const count = tab === 'Notes' ? myPlayerNotes.length : criteria.filter(c => c.category === tab).length;
             const ratedCount = tab === 'Notes' ? 0 : criteria.filter(c => c.category === tab && scoreMap.has(c.id)).length;

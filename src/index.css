@@ -12,6 +12,16 @@
   }
 }
 
+/* Horizontal scroll rows — smooth momentum on iOS, confined to x-axis so
+   vertical page scroll and pinch-zoom are never accidentally hijacked.    */
+.scroll-x-touch {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-snap-type: none;
+  overscroll-behavior-x: contain;
+}
+
 /* Custom scrollbars — dark mode */
 .dark ::-webkit-scrollbar {
   width: 6px;
