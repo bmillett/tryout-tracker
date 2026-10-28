@@ -171,7 +171,7 @@ Scores are on a 1 to 5 scale (-- = 1, Std = 3, ++ = 5). Players marked Cut / Mov
 
 ### Settings
 
-Tap **Settings** to open the admin screen. At the top you see the current session, its status (**Live** or **Finalized**), the target roster size and how many players are locked. You can switch session from the drop-down, or use **Finalize Session** / **Re-Open Session** (the same freeze as on the Roster Board).
+Tap **Settings** to open the admin screen. At the top you see the current session, its status (**Live** or **Frozen**), the target roster size and how many players are locked. You can switch session from the drop-down, or use **Freeze Evaluator Inputs** / **Re-Open Inputs** (the same toggle as on the Roster Board).
 
 There are four tabs.
 

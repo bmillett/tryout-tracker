@@ -299,9 +299,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onRefresh();
   };
 
-  // Finalize / Unlock Session
+  // Freeze / Re-Open Session
   const handleToggleFinalize = async () => {
     const nextStatus = currentSession.status === 'active' ? 'finalized' : 'active';
+    if (nextStatus === 'finalized') {
+      if (!confirm('Freeze evaluator inputs? Evaluators will immediately see a read-only banner. You can re-open at any time.')) return;
+    }
     await db.sessions.update(currentSession.id, { status: nextStatus });
     const updated = { ...currentSession, status: nextStatus as any };
     await SyncService.syncSession(updated);
@@ -442,7 +445,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30' 
                 : 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30'
             }`}>
-              {currentSession.status === 'active' ? '🟢 Live Session' : '🔒 Finalized / Locked'}
+              {currentSession.status === 'active' ? '🟢 Live' : '🔒 Frozen'}
             </span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-1">{currentSession.name}</h2>
@@ -469,7 +472,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             ))}
           </select>
 
-          {/* Finalize Button */}
+          {/* Freeze / Re-Open Button */}
           <button
             onClick={handleToggleFinalize}
             className={`px-3 py-2 text-xs font-semibold rounded-xl border flex items-center gap-1.5 transition ${
@@ -481,12 +484,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {currentSession.status === 'active' ? (
               <>
                 <Lock className="w-3.5 h-3.5" />
-                <span>Finalize Session</span>
+                <span>Freeze Evaluator Inputs</span>
               </>
             ) : (
               <>
                 <Unlock className="w-3.5 h-3.5" />
-                <span>Re-Open Session</span>
+                <span>Re-Open Inputs</span>
               </>
             )}
           </button>
