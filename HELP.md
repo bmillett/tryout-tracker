@@ -29,11 +29,21 @@ The first time you open the link, the app asks for your name or initials (for ex
 
 The name is remembered on that device. To switch to a different name, tap the **exit icon** (top right). This also locks the coach screens.
 
-### Add it to your home screen (optional)
+### Save the link to your home screen or bookmarks
 
-On the name screen, tap **Tip: Add to Phone Home Screen** for steps for iPhone (Safari) and Android (Chrome).
+The most reliable way to keep quick access to your team's link is to **bookmark it** in your phone's browser. A bookmark always opens the exact team URL.
 
-> If you are on more than one team, bookmark each team's link instead of installing. An installed copy opens the last team used on that device.
+**iPhone / iPad (Safari):** tap the **Share** button → **Add Bookmark**, or **Add to Favourites**.
+
+**Android (Chrome):** tap the **three-dot menu** → **Add to bookmarks** (or **Bookmarks → Save**).
+
+You can also add the app to your home screen for a full-screen experience, but be aware of one limitation: the home-screen shortcut always opens the app's root address (`/`), not your team's specific link. That means tapping it will land on a "team not found" screen until you navigate to your team link again. For that reason, **bookmarking is the better choice for most evaluators**, especially if you work with more than one team.
+
+If you still want a home-screen icon:
+
+**iPhone / iPad (Safari):** tap **Share** → scroll down → **Add to Home Screen** → **Add**.
+
+**Android (Chrome):** tap the **three-dot menu** → **Install App** or **Add to Home Screen** → **Install / Add**.
 
 ### Works offline
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Sparkles, ArrowRight, Smartphone, Share, MoreVertical, PlusSquare, Download } from 'lucide-react';
+import { User, Sparkles, ArrowRight, Smartphone, Share, MoreVertical, PlusSquare, Download, Bookmark } from 'lucide-react';
 import { useTeam } from '../context/TeamContext';
 
 interface EvaluatorPromptProps {
@@ -57,7 +57,7 @@ export const EvaluatorPrompt: React.FC<EvaluatorPromptProps> = ({ onNameSubmit }
           </button>
         </form>
 
-        {/* Add to Home Screen Accordion / Guide */}
+        {/* Bookmark / Install Accordion */}
         <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 text-left">
           <button
             type="button"
@@ -65,8 +65,8 @@ export const EvaluatorPrompt: React.FC<EvaluatorPromptProps> = ({ onNameSubmit }
             className="w-full flex items-center justify-between text-[11px] font-semibold text-amber-600 dark:text-amber-300 hover:text-amber-500 dark:hover:text-amber-200 bg-amber-400/10 border border-amber-400/20 px-3 py-2 rounded-xl transition"
           >
             <span className="flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Tip: Add to Phone Home Screen</span>
+              <Bookmark className="w-3.5 h-3.5" />
+              <span>Tip: Save this link to your phone</span>
             </span>
             <span className="text-[10px] text-amber-500 dark:text-amber-400 font-bold">
               {showInstallHelp ? 'Hide' : 'How-to'}
@@ -75,35 +75,37 @@ export const EvaluatorPrompt: React.FC<EvaluatorPromptProps> = ({ onNameSubmit }
 
           {showInstallHelp && (
             <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 space-y-3 animate-in fade-in duration-150">
-              {/* iOS Instructions */}
+
+              {/* Bookmark — recommended */}
               <div>
                 <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
-                  <span>iPhone / iPad (Safari)</span>
+                  <Bookmark className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+                  <span>Bookmark (recommended)</span>
                 </div>
-                <ol className="list-decimal list-inside space-y-1 text-slate-500 dark:text-slate-400 pl-1 text-[11px]">
-                  <li>Tap the <strong className="text-slate-700 dark:text-slate-200">Share button</strong> (<Share className="w-3 h-3 inline text-sky-500 dark:text-sky-400" /> at bottom of Safari).</li>
-                  <li>Scroll down and tap <strong className="text-slate-700 dark:text-slate-200">&ldquo;Add to Home Screen&rdquo;</strong> (<PlusSquare className="w-3 h-3 inline text-slate-500 dark:text-slate-300" />).</li>
-                  <li>Tap <strong className="text-amber-600 dark:text-amber-300">Add</strong> in top right.</li>
-                </ol>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
+                  A bookmark always opens this exact team link.
+                </p>
+                <div className="space-y-1 text-slate-500 dark:text-slate-400">
+                  <div><span className="font-semibold text-slate-700 dark:text-slate-200">iPhone (Safari):</span> tap <Share className="w-3 h-3 inline text-sky-500 dark:text-sky-400" /> → <strong className="text-slate-700 dark:text-slate-200">Add Bookmark</strong> or <strong className="text-slate-700 dark:text-slate-200">Add to Favourites</strong>.</div>
+                  <div><span className="font-semibold text-slate-700 dark:text-slate-200">Android (Chrome):</span> tap <MoreVertical className="w-3 h-3 inline text-slate-500 dark:text-slate-300" /> → <strong className="text-slate-700 dark:text-slate-200">Add to bookmarks</strong>.</div>
+                </div>
               </div>
 
-              {/* Android Instructions */}
+              {/* Home screen — secondary */}
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60">
                 <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-                  <span>Android (Chrome)</span>
+                  <Smartphone className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                  <span>Add to Home Screen</span>
                 </div>
-                <ol className="list-decimal list-inside space-y-1 text-slate-500 dark:text-slate-400 pl-1 text-[11px]">
-                  <li>Tap the <strong className="text-slate-700 dark:text-slate-200">Three Dots Menu</strong> (<MoreVertical className="w-3 h-3 inline text-slate-500 dark:text-slate-300" /> in top right).</li>
-                  <li>Tap <strong className="text-slate-700 dark:text-slate-200">&ldquo;Install App&rdquo;</strong> or <strong className="text-slate-700 dark:text-slate-200">&ldquo;Add to Home Screen&rdquo;</strong> (<Download className="w-3 h-3 inline text-emerald-500 dark:text-emerald-400" />).</li>
-                  <li>Tap <strong className="text-amber-600 dark:text-amber-300">Install / Add</strong>.</li>
-                </ol>
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 mb-1.5">
+                  ⚠️ Home-screen shortcuts open the app's root address, not your team link — you'll need to navigate to your team again each time.
+                </p>
+                <div className="space-y-1 text-slate-500 dark:text-slate-400">
+                  <div><span className="font-semibold text-slate-700 dark:text-slate-200">iPhone (Safari):</span> tap <Share className="w-3 h-3 inline text-sky-500 dark:text-sky-400" /> → <strong className="text-slate-700 dark:text-slate-200">Add to Home Screen</strong> (<PlusSquare className="w-3 h-3 inline" />) → <strong className="text-amber-600 dark:text-amber-300">Add</strong>.</div>
+                  <div><span className="font-semibold text-slate-700 dark:text-slate-200">Android (Chrome):</span> tap <MoreVertical className="w-3 h-3 inline text-slate-500 dark:text-slate-300" /> → <strong className="text-slate-700 dark:text-slate-200">Install App</strong> or <strong className="text-slate-700 dark:text-slate-200">Add to Home Screen</strong> (<Download className="w-3 h-3 inline text-emerald-500 dark:text-emerald-400" />) → <strong className="text-amber-600 dark:text-amber-300">Install</strong>.</div>
+                </div>
               </div>
 
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 italic pt-1 border-t border-slate-200 dark:border-slate-800/40">
-                Works in standard mobile browsers too — offline caching and automatic sync work either way!
-              </p>
             </div>
           )}
         </div>
