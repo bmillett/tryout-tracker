@@ -74,6 +74,7 @@ export interface PendingSyncItem {
   id: string;
   type:
     | 'evaluation'
+    | 'evaluation_delete'
     | 'note'
     | 'player_update'
     | 'player_lock'

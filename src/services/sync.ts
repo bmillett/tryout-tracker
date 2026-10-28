@@ -215,6 +215,32 @@ export class SyncService {
     return fullEval;
   }
 
+  // Delete evaluation optimistically from local DB and enqueue deletion for Firestore sync
+  public static async deleteEvaluation(params: Pick<Evaluation, 'session_id' | 'player_id' | 'criterion_id' | 'evaluator_name'>) {
+    const existing = await db.evaluations
+      .where({
+        session_id: params.session_id,
+        player_id: params.player_id,
+        criterion_id: params.criterion_id,
+        evaluator_name: params.evaluator_name
+      })
+      .first();
+
+    if (!existing) return;
+
+    await db.evaluations.delete(existing.id);
+
+    await db.syncQueue.put({
+      id: `queue_${existing.id}`,
+      type: 'evaluation_delete',
+      payload: { id: existing.id },
+      timestamp: Date.now()
+    });
+
+    this.notify();
+    this.flushQueue();
+  }
+
   // Save note optimistically
   public static async saveNote(note: Omit<PlayerNote, 'id' | 'created_at'>) {
     const id = `note_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
@@ -326,6 +352,8 @@ export class SyncService {
             const evalDocRef = doc(firestore, teamBase, 'evaluations', evalItem.id);
             await setDoc(evalDocRef, evalItem, { merge: true });
             await db.evaluations.update(evalItem.id, { is_synced: true });
+          } else if (item.type === 'evaluation_delete') {
+            await deleteDoc(doc(firestore, teamBase, 'evaluations', item.payload.id));
           } else if (item.type === 'note') {
             const noteItem = item.payload as PlayerNote;
             const noteDocRef = doc(firestore, teamBase, 'player_notes', noteItem.id);

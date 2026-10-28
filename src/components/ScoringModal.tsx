@@ -67,13 +67,24 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
 
   const handleScoreTap = async (criterionId: string, score: number) => {
     if (isFinalized) return;
-    await SyncService.saveEvaluation({
-      session_id: session.id,
-      player_id: player.id,
-      criterion_id: criterionId,
-      evaluator_name: evaluatorName,
-      score: score
-    });
+    const currentScore = scoreMap.get(criterionId);
+    if (currentScore === score) {
+      // Tapping the already-selected rating clears it
+      await SyncService.deleteEvaluation({
+        session_id: session.id,
+        player_id: player.id,
+        criterion_id: criterionId,
+        evaluator_name: evaluatorName,
+      });
+    } else {
+      await SyncService.saveEvaluation({
+        session_id: session.id,
+        player_id: player.id,
+        criterion_id: criterionId,
+        evaluator_name: evaluatorName,
+        score: score
+      });
+    }
     onRefresh();
   };
 
@@ -240,15 +251,16 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
                             type="button"
                             onClick={() => handleScoreTap(crit.id, lvl.score)}
                             disabled={isFinalized}
+                            title={isSelected ? 'Tap again to clear' : undefined}
                             className={`py-2 px-1 rounded-xl border text-center transition flex flex-col items-center justify-center active:scale-95 ${
                               isSelected
                                 ? 'bg-amber-400 border-amber-400 text-slate-950 font-black shadow-lg scale-102 ring-2 ring-amber-400/30'
                                 : `${lvl.color} border-slate-200 dark:border-slate-700/60`
                             }`}
                           >
-                            <span className="text-sm font-black tracking-tight">{lvl.label}</span>
+                            <span className="text-sm font-black tracking-tight">{isSelected ? '×' : lvl.label}</span>
                             <span className={`text-[9px] font-semibold ${isSelected ? 'text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}>
-                              {lvl.sub.split('/')[0]}
+                              {isSelected ? 'clear' : lvl.sub.split('/')[0]}
                             </span>
                           </button>
                         );
