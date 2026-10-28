@@ -112,7 +112,7 @@ For each skill, tap one of five buttons:
 | **+** | Above standard |
 | **++** | Expert |
 
-The chosen button turns amber. Tap a different button to change your score. A skill may show an **e.g. Name** tag, which is an exemplar: a player who is the benchmark for that skill. The small description under the skill name tells you what to look for.
+The chosen button turns amber and shows **× clear**. Tap a different button to change your score, or tap the same button again to remove the rating entirely. A skill may show an **e.g. Name** tag, which is an exemplar: a player who is the benchmark for that skill. The small description under the skill name tells you what to look for.
 
 The bottom bar shows how many skills you have graded in total. Tap **Done** to close.
 
