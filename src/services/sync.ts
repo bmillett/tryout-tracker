@@ -101,6 +101,8 @@ export class SyncService {
             if (data && data.id) {
               await db.evaluations.put({ ...data, is_synced: true });
             }
+          } else if (change.type === 'removed') {
+            await db.evaluations.delete(change.doc.id);
           }
         });
       }, (err) => {
@@ -117,6 +119,8 @@ export class SyncService {
             if (data && data.id) {
               await db.notes.put({ ...data, is_synced: true });
             }
+          } else if (change.type === 'removed') {
+            await db.notes.delete(change.doc.id);
           }
         });
       }, (err) => {
@@ -241,6 +245,45 @@ export class SyncService {
     this.flushQueue();
   }
 
+  // Delete all evaluations and notes for a given evaluator in a session
+  public static async deleteEvaluator(evaluatorName: string, sessionId: string) {
+    // Find all matching records
+    const evals = await db.evaluations
+      .where('session_id').equals(sessionId)
+      .filter(e => e.evaluator_name === evaluatorName)
+      .toArray();
+    const notes = await db.notes
+      .where('session_id').equals(sessionId)
+      .filter(n => n.evaluator_name === evaluatorName)
+      .toArray();
+
+    // Delete locally
+    await db.evaluations.bulkDelete(evals.map(e => e.id));
+    await db.notes.bulkDelete(notes.map(n => n.id));
+
+    // Queue Firestore deletions
+    const now = Date.now();
+    for (const e of evals) {
+      await db.syncQueue.put({
+        id: `queue_${e.id}`,
+        type: 'evaluation_delete',
+        payload: { id: e.id },
+        timestamp: now
+      });
+    }
+    for (const n of notes) {
+      await db.syncQueue.put({
+        id: `queue_${n.id}`,
+        type: 'note_delete',
+        payload: { id: n.id },
+        timestamp: now
+      });
+    }
+
+    this.notify();
+    this.flushQueue();
+  }
+
   // Save note optimistically
   public static async saveNote(note: Omit<PlayerNote, 'id' | 'created_at'>) {
     const id = `note_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
@@ -354,6 +397,8 @@ export class SyncService {
             await db.evaluations.update(evalItem.id, { is_synced: true });
           } else if (item.type === 'evaluation_delete') {
             await deleteDoc(doc(firestore, teamBase, 'evaluations', item.payload.id));
+          } else if (item.type === 'note_delete') {
+            await deleteDoc(doc(firestore, teamBase, 'player_notes', item.payload.id));
           } else if (item.type === 'note') {
             const noteItem = item.payload as PlayerNote;
             const noteDocRef = doc(firestore, teamBase, 'player_notes', noteItem.id);

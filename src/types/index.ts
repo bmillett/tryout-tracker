@@ -76,6 +76,7 @@ export interface PendingSyncItem {
     | 'evaluation'
     | 'evaluation_delete'
     | 'note'
+    | 'note_delete'
     | 'player_update'
     | 'player_lock'
     | 'player_delete'

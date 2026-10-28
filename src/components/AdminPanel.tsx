@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { SyncService } from '../services/sync';
 import type { Player, Criterion, TryoutSession, PlayerStatus } from '../types';
@@ -22,7 +23,8 @@ import {
   Flame,
   Sparkles,
   Pencil,
-  Check
+  Check,
+  UserX
 } from 'lucide-react';
 
 // Inline-editable player name. Edits stay local until blur / Enter, so a rename
@@ -103,6 +105,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [includeLocksOnly, setIncludeLocksOnly] = useState(false);
 
   const [saveSuccess, setSaveSuccess] = useState('');
+
+  // Evaluator list (derived from evaluations in the current session)
+  const sessionEvaluators = useLiveQuery(async () => {
+    const evals = await db.evaluations.where('session_id').equals(currentSession.id).toArray();
+    const names = [...new Set(evals.map(e => e.evaluator_name))].sort();
+    return names.map(name => ({
+      name,
+      evalCount: evals.filter(e => e.evaluator_name === name).length
+    }));
+  }, [currentSession.id]) ?? [];
+
+  const handleDeleteEvaluator = async (name: string) => {
+    if (!confirm(`Remove all scores and notes by "${name}" from this session? This cannot be undone.`)) return;
+    await SyncService.deleteEvaluator(name, currentSession.id);
+  };
 
   // CSV Import
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1084,6 +1101,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               This app uses a shared Firebase Firestore backend. All devices on the same team URL sync automatically — no per-device configuration is needed. Use the super-admin screen (root URL) to create or edit teams.
             </p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-slate-800 dark:text-white font-semibold text-sm mb-1">
+              <UserX className="w-5 h-5 text-rose-500" />
+              <span>Evaluators</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+              Evaluators who have submitted scores this session. You can remove an evaluator's scores and notes entirely — for example if someone entered the wrong name.
+            </p>
+            {sessionEvaluators.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic">No evaluations recorded yet for this session.</p>
+            ) : (
+              <ul className="space-y-2">
+                {sessionEvaluators.map(({ name, evalCount }) => (
+                  <li key={name} className="flex items-center justify-between gap-3 py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50">
+                    <div>
+                      <span className="text-sm font-semibold text-slate-800 dark:text-white">{name}</span>
+                      <span className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">{evalCount} score{evalCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteEvaluator(name)}
+                      className="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition"
+                      title={`Remove all scores and notes by ${name}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}

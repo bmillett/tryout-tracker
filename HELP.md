@@ -262,6 +262,10 @@ The page reloads and the new PIN is used straight away on this device. Other dev
 
 > **Security note:** anyone who knows a team's link can change its PIN, and the PIN is stored where anyone with the link could read it. The PIN keeps casual users out of coach screens. It does not protect against someone determined. Keep team links private. If a PIN is changed by mistake, a super-admin can reset it.
 
+##### Evaluators
+
+Lists every evaluator who has submitted scores in the current session, along with their score count. Tap the **trash icon** next to a name to remove all that evaluator's scores and notes from this session. Use this to clean up a duplicate or wrongly-named evaluator profile. The removal syncs to all connected devices.
+
 ##### Cloud Sync
 
 Information only. All devices using the same team link sync automatically, with no setup.
