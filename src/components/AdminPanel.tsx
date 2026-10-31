@@ -57,6 +57,36 @@ const PlayerNameInput: React.FC<{ name: string; onCommit: (name: string) => void
   );
 };
 
+// Inline-editable jersey number. Same commit-on-blur/Enter behavior as the name input.
+// Non-numeric or negative input is rejected and reverts to the current number.
+const PlayerNumberInput: React.FC<{ number: number; onCommit: (num: number) => void }> = ({ number, onCommit }) => {
+  const [value, setValue] = useState(String(number));
+  useEffect(() => { setValue(String(number)); }, [number]);
+
+  const commit = () => {
+    const parsed = parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed < 0) { setValue(String(number)); return; }
+    if (parsed !== number) onCommit(parsed);
+    else setValue(String(number));
+  };
+
+  return (
+    <input
+      type="number"
+      min={0}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        if (e.key === 'Escape') { setValue(String(number)); (e.target as HTMLInputElement).blur(); }
+      }}
+      className="w-16 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-mono font-bold text-amber-500 dark:text-amber-400 outline-none focus:border-amber-400"
+      aria-label="Jersey number"
+    />
+  );
+};
+
 interface AdminPanelProps {
   currentSession: TryoutSession;
   sessions: TryoutSession[];
@@ -148,19 +178,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         const group = (row['Group'] || row['group'] || 'Group A').trim();
         const gender = normalizeGender(row['Gender'] || row['gender']);
 
-        // Match by name (case-insensitive); also require jersey number match when one is provided
+        // Match by name (case-insensitive) only, so re-importing with new colors/numbers updates in place
         const nameLower = name.toLowerCase();
-        const match = existing.find(p => {
-          const nameMatch = p.name.toLowerCase() === nameLower;
-          if (!nameMatch) return false;
-          return !hasExplicitNumber || p.pinney_number === num;
-        });
+        const match = existing.find(p => p.name.toLowerCase() === nameLower);
 
         if (match) {
           // Upsert: update mutable fields, preserve status/is_locked/id
           const updatedPlayer: Player = {
             ...match,
-            pinney_number: num,
+            pinney_number: hasExplicitNumber ? num : match.pinney_number,
             pinney_color: color,
             group_name: group,
             ...(gender ? { gender } : {})
@@ -681,8 +707,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     players.map((player) => {
                       return (
                         <tr key={player.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                          <td className="p-3 font-mono font-bold text-amber-500 dark:text-amber-400">
-                            #{player.pinney_number}
+                          <td className="p-3">
+                            <PlayerNumberInput
+                              number={player.pinney_number}
+                              onCommit={(num) => handleUpdatePlayer(player.id, { pinney_number: num })}
+                            />
                           </td>
                           <td className="p-3">
                             <PlayerNameInput

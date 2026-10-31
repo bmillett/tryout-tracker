@@ -199,8 +199,20 @@ Kian Miller,7,Navy / Blue,Group A
 Maya Singh,22,White,Group B
 ```
 
+**Re-importing updates existing players.** A CSV row whose name matches a player already in the current session (ignoring upper/lower case) updates that player instead of adding a new one. This makes it easy to re-upload a roster after pinney colors change. The match is on name only.
+
+- The pinney color and group are replaced with the values in the file. A blank color becomes N/A and a blank group becomes "Group A", so keep those columns filled in.
+- The number is replaced when the row has one. If the row has no number, the existing number is kept.
+- Gender is updated only when the row has a gender value.
+- Status, lock and all scores and notes are kept.
+- Rows with a name not yet in the session are added as new players.
+- If two players share a name, they are treated as one. Give them distinct names (for example, add an initial) before importing.
+
+When the import finishes, a message shows how many players were added and how many were updated.
+
 **Edit players.** The table lists every player. Change these directly:
 
+- **Number**: click, edit, then press Enter or click away. Press Esc to cancel. Only whole numbers of 0 or more are accepted.
 - **Name**: click, edit, then press Enter or click away. Press Esc to cancel.
 - **Pinney Color**: pick from the list.
 - **Group**: type a new group name.
