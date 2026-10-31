@@ -22,10 +22,10 @@ import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 const SAMPLE_PLAYERS = [
-  { name: 'Kian M.', pinney_number: 7, pinney_color: 'Blue / Navy', group_name: 'Group A', is_locked: true, status: 'active' },
+  { name: 'Kian M.', pinney_number: 7, pinney_color: 'Blue', group_name: 'Group A', is_locked: true, status: 'active' },
   { name: 'Lucas W.', pinney_number: 14, pinney_color: 'Red', group_name: 'Group A', is_locked: false, status: 'active' },
   { name: 'Maya S.', pinney_number: 22, pinney_color: 'White', group_name: 'Group A', is_locked: false, status: 'active' },
-  { name: 'Ethan B.', pinney_number: 3, pinney_color: 'Blue / Navy', group_name: 'Group A', is_locked: false, status: 'active' },
+  { name: 'Ethan B.', pinney_number: 3, pinney_color: 'Blue', group_name: 'Group A', is_locked: false, status: 'active' },
   { name: 'Ava T.', pinney_number: 11, pinney_color: 'Red', group_name: 'Group B', is_locked: false, status: 'active' },
   { name: 'Noah G.', pinney_number: 88, pinney_color: 'Yellow / Gold', group_name: 'Group B', is_locked: false, status: 'active' },
   { name: 'Sammy C.', pinney_number: 19, pinney_color: 'Green', group_name: 'Group B', is_locked: false, status: 'active' },
@@ -34,7 +34,7 @@ const SAMPLE_PLAYERS = [
 ];
 
 // Generated rosters use 4 pinney colors (names must match PINNEY_COLORS in src/data/defaultData.ts).
-const PINNEY_COLOR_NAMES = ['Red', 'Blue / Navy', 'White', 'Yellow / Gold'];
+const PINNEY_COLOR_NAMES = ['Red', 'Blue', 'White', 'Yellow / Gold'];
 const MALE_NAMES = [
   'Liam', 'Owen', 'Jack', 'Caleb', 'Mason', 'Eli', 'Declan', 'Finn', 'Theo', 'Rhys',
   'Jonah', 'Micah', 'Silas', 'Wyatt', 'Quinn', 'Reid', 'Dominic', 'Felix', 'Hugo', 'Ravi',

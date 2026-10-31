@@ -135,7 +135,7 @@ export const PRESET_NOTE_TAGS = [
 
 export const PINNEY_COLORS = [
   { name: 'Red', hex: '#ef4444', text: 'text-white', border: 'border-red-500', bg: 'bg-red-600' },
-  { name: 'Blue / Navy', hex: '#1d4ed8', text: 'text-white', border: 'border-blue-600', bg: 'bg-blue-700' },
+  { name: 'Blue', hex: '#1d4ed8', text: 'text-white', border: 'border-blue-600', bg: 'bg-blue-700' },
   { name: 'White', hex: '#f8fafc', text: 'text-slate-900', border: 'border-slate-300', bg: 'bg-white' },
   { name: 'Black', hex: '#0f172a', text: 'text-white', border: 'border-slate-600', bg: 'bg-slate-900' },
   { name: 'Green', hex: '#16a34a', text: 'text-white', border: 'border-green-600', bg: 'bg-green-600' },
@@ -153,33 +153,48 @@ export function jerseyLabel(num: number | null | undefined, prefix = ''): string
 // Pinney color used when none is set.
 export const NO_PINNEY_COLOR = 'N/A';
 
-// Alternate or old color names; they map to current entries. Keys are lowercase.
-// Includes short names accepted on CSV import (yellow, blue) and the former
-// name 'Navy / Blue' still stored on existing players.
+// Normalizes a color name for matching: lowercase, invisible/non-breaking spaces
+// treated as spaces, whitespace collapsed, and no spaces around "/" so
+// "Blue/Navy", "Blue / Navy" and "blue /navy" are the same.
+function colorKey(name?: string): string {
+  return (name || '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\/\s*/g, '/')
+    .trim();
+}
+
+// Alternate or old color names; they map to current entries. Keys are in colorKey
+// form. Includes short names accepted on CSV import and the former names
+// 'Navy / Blue' and 'Blue / Navy' still stored on existing players.
 const LEGACY_PINNEY_COLORS: Record<string, string> = {
   purple: 'Pink / Purple',
   pink: 'Pink / Purple',
   yellow: 'Yellow / Gold',
-  blue: 'Blue / Navy',
-  'navy / blue': 'Blue / Navy',
+  gold: 'Yellow / Gold',
+  navy: 'Blue',
+  'navy/blue': 'Blue',
+  'blue/navy': 'Blue',
 };
 
 // Resolves a stored color name to a PINNEY_COLORS entry. Blank, unknown, or
 // removed colors (e.g. Teal) resolve to N/A (grey).
 export function getPinneyColor(name?: string) {
-  const key = (name || '').trim().toLowerCase();
-  const resolved = (LEGACY_PINNEY_COLORS[key] || key).toLowerCase();
+  const key = colorKey(name);
+  const resolved = colorKey(LEGACY_PINNEY_COLORS[key] || key);
   return (
-    PINNEY_COLORS.find(c => c.name.toLowerCase() === resolved) ||
+    PINNEY_COLORS.find(c => colorKey(c.name) === resolved) ||
     PINNEY_COLORS.find(c => c.name === NO_PINNEY_COLOR)!
   );
 }
 
 export const INITIAL_SAMPLE_PLAYERS: Omit<Player, 'id' | 'session_id'>[] = [
-  { name: 'Kian M.', pinney_number: 7, pinney_color: 'Blue / Navy', group_name: 'Group A', is_locked: true, status: 'active' },
+  { name: 'Kian M.', pinney_number: 7, pinney_color: 'Blue', group_name: 'Group A', is_locked: true, status: 'active' },
   { name: 'Lucas W.', pinney_number: 14, pinney_color: 'Red', group_name: 'Group A', is_locked: false, status: 'active' },
   { name: 'Maya S.', pinney_number: 22, pinney_color: 'White', group_name: 'Group A', is_locked: false, status: 'active' },
-  { name: 'Ethan B.', pinney_number: 3, pinney_color: 'Blue / Navy', group_name: 'Group A', is_locked: false, status: 'active' },
+  { name: 'Ethan B.', pinney_number: 3, pinney_color: 'Blue', group_name: 'Group A', is_locked: false, status: 'active' },
   { name: 'Ava T.', pinney_number: 11, pinney_color: 'Red', group_name: 'Group B', is_locked: false, status: 'active' },
   { name: 'Noah G.', pinney_number: 88, pinney_color: 'Yellow / Gold', group_name: 'Group B', is_locked: false, status: 'active' },
   { name: 'Sammy C.', pinney_number: 19, pinney_color: 'Green', group_name: 'Group B', is_locked: false, status: 'active' },

@@ -163,6 +163,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      // Normalize headers so "Pinney Color", "pinney_color", " Color " and a BOM-prefixed
+      // first column all match: lowercase, no spaces/underscores/hyphens.
+      transformHeader: (h) => h.replace(/^\uFEFF/, '').trim().toLowerCase().replace(/[\s_-]+/g, ''),
       complete: async (results) => {
       const rows = results.data as any[];
 
@@ -171,21 +174,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       let added = 0, updated = 0;
       for (const [idx, row] of rows.entries()) {
-        const firstName = row['FirstName'] || row['First Name'] || row['firstname'] || '';
-        const lastName = row['LastName'] || row['Last Name'] || row['lastname'] || '';
+        const firstName = row['firstname'] || '';
+        const lastName = row['lastname'] || '';
         const combinedName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : '';
-        const name = (row['Name'] || row['name'] || row['Player'] || combinedName || `Player ${idx + 1}`).trim();
-        const rawNum = parseInt(row['Number'] || row['number'] || row['Jersey'] || row['#'] || '', 10);
+        const name = (row['name'] || row['player'] || combinedName || `Player ${idx + 1}`).trim();
+        const rawNum = parseInt(row['number'] || row['jersey'] || row['#'] || '', 10);
         // A blank/invalid number is stored as null and shown as "--"
         const hasExplicitNumber = Number.isFinite(rawNum);
         const num = hasExplicitNumber ? rawNum : null;
         // Blank color/group cells are "not provided": new players get the defaults,
         // existing players keep their current values.
-        const rawColor = (row['PinneyColor'] || row['Color'] || row['color'] || '').trim();
-        const rawGroup = (row['Group'] || row['group'] || '').trim();
+        const rawColor = (row['pinneycolor'] || row['color'] || row['colour'] || '').trim();
+        const rawGroup = (row['group'] || '').trim();
         const color = getPinneyColor(rawColor).name;
         const group = rawGroup || 'Group A';
-        const gender = normalizeGender(row['Gender'] || row['gender']);
+        const gender = normalizeGender(row['gender']);
 
         // Match by name (case-insensitive) only, so re-importing with new colors/numbers updates in place
         const nameLower = name.toLowerCase();

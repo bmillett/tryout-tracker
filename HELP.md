@@ -189,20 +189,20 @@ There are four tabs.
 | `Group` | Optional. For a new player, blank becomes "Group A" |
 | `Gender` | Mixed-gender teams only. M, Male, Men, Man, Boy, F, Female, Women, Woman, Girl (any case) |
 
-`Color` and `color` also work as the color column name, and `Jersey` or `#` for the number.
+Column headers are not case-sensitive, and spaces, underscores and hyphens are ignored, so `Pinney Color`, `pinney_color` and `PinneyColor` all work. `Color` also works as the color column name, `Jersey` or `#` for the number, and `Player` for the name. You can also use `First Name` and `Last Name` columns instead of `Name`.
 
 Example:
 
 ```
 Name,Number,PinneyColor,Group
-Kian Miller,7,Blue / Navy,Group A
+Kian Miller,7,Blue,Group A
 Maya Singh,22,White,Group B
 ```
 
 **Re-importing updates existing players.** A CSV row whose name matches a player already in the current session (ignoring upper/lower case) updates that player instead of adding a new one. This makes it easy to re-upload a roster after pinney colors change. The match is on name only.
 
 - Each of number, pinney color and group is replaced only when the row has a value for it. A blank cell (or a missing column) keeps the player's current value. This lets you import colors first and the numbers later, or the reverse, without wiping the other.
-- Color names are not case-sensitive. `Yellow` is read as Yellow / Gold, `Blue` (or the older `Navy / Blue`) as Blue / Navy, and `Pink` or `Purple` as Pink / Purple.
+- Color names are not case-sensitive, and spaces around the `/` are optional. `Yellow` or `Gold` is read as Yellow / Gold, `Blue`, `Navy`, `Blue/Navy` or the older `Navy / Blue` as Blue / Navy, and `Pink` or `Purple` as Pink / Purple.
 - A color name the app doesn't recognize is treated as a value and sets the color to N/A. Check spelling if a color goes grey.
 - A new player whose row has no number shows `--`.
 - Gender is updated only when the row has a gender value.
@@ -233,7 +233,7 @@ When the import finishes, a message shows how many players were added and how ma
 | **Absent** | Card is faded and tagged |
 | **Cut / Moved Down** | Hidden from evaluators and the Roster Board. Not carried into the next session |
 
-**Pinney colors available:** Red, Blue / Navy, White, Black, Green, Yellow / Gold, Orange, Pink / Purple, and **N/A** (grey). Use N/A when a player has no pinney color yet. The color only changes how the number badge looks.
+**Pinney colors available:** Red, Blue, White, Black, Green, Yellow / Gold, Orange, Pink / Purple, and **N/A** (grey). Use N/A when a player has no pinney color yet. The color only changes how the number badge looks.
 
 #### Criteria & Exemplars
 
