@@ -185,8 +185,8 @@ There are four tabs.
 |---|---|
 | `Name` | Player name |
 | `Number` | Jersey number. Optional. Blank shows as `--` |
-| `PinneyColor` | Optional. Blank or unrecognized becomes N/A |
-| `Group` | Defaults to "Group A" |
+| `PinneyColor` | Optional. For a new player, blank or unrecognized becomes N/A |
+| `Group` | Optional. For a new player, blank becomes "Group A" |
 | `Gender` | Mixed-gender teams only. M, Male, Men, Man, Boy, F, Female, Women, Woman, Girl (any case) |
 
 `Color` and `color` also work as the color column name, and `Jersey` or `#` for the number.
@@ -201,8 +201,9 @@ Maya Singh,22,White,Group B
 
 **Re-importing updates existing players.** A CSV row whose name matches a player already in the current session (ignoring upper/lower case) updates that player instead of adding a new one. This makes it easy to re-upload a roster after pinney colors change. The match is on name only.
 
-- The pinney color and group are replaced with the values in the file. A blank color becomes N/A and a blank group becomes "Group A", so keep those columns filled in.
-- The number is replaced when the row has one. If the row has no number, the existing number is kept. A new player whose row has no number shows `--`.
+- Each of number, pinney color and group is replaced only when the row has a value for it. A blank cell (or a missing column) keeps the player's current value. This lets you import colors first and the numbers later, or the reverse, without wiping the other.
+- A color name the app doesn't recognize is treated as a value and sets the color to N/A. Check spelling if a color goes grey.
+- A new player whose row has no number shows `--`.
 - Gender is updated only when the row has a gender value.
 - Status, lock and all scores and notes are kept.
 - Rows with a name not yet in the session are added as new players.

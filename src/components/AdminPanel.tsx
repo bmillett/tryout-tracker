@@ -179,8 +179,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         // A blank/invalid number is stored as null and shown as "--"
         const hasExplicitNumber = Number.isFinite(rawNum);
         const num = hasExplicitNumber ? rawNum : null;
-        const color = getPinneyColor(row['PinneyColor'] || row['Color'] || row['color']).name;
-        const group = (row['Group'] || row['group'] || 'Group A').trim();
+        // Blank color/group cells are "not provided": new players get the defaults,
+        // existing players keep their current values.
+        const rawColor = (row['PinneyColor'] || row['Color'] || row['color'] || '').trim();
+        const rawGroup = (row['Group'] || row['group'] || '').trim();
+        const color = getPinneyColor(rawColor).name;
+        const group = rawGroup || 'Group A';
         const gender = normalizeGender(row['Gender'] || row['gender']);
 
         // Match by name (case-insensitive) only, so re-importing with new colors/numbers updates in place
@@ -192,8 +196,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           const updatedPlayer: Player = {
             ...match,
             pinney_number: hasExplicitNumber ? num : match.pinney_number,
-            pinney_color: color,
-            group_name: group,
+            pinney_color: rawColor ? color : match.pinney_color,
+            group_name: rawGroup ? group : match.group_name,
             ...(gender ? { gender } : {})
           };
           await SyncService.syncPlayer(updatedPlayer);
