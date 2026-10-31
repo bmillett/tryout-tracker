@@ -151,7 +151,7 @@ export const App: React.FC = () => {
   const filteredPlayers = players.filter(p => {
     if (p.status === 'cut_moved_down') return false;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.pinney_number.toString().includes(searchQuery);
+                          (p.pinney_number ?? '').toString().includes(searchQuery);
     const matchesGroup = selectedGroupFilter === 'All' || p.group_name === selectedGroupFilter;
     const matchesGender =
       !team.mixed_gender ||

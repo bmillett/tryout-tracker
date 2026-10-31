@@ -39,7 +39,7 @@ export interface Player {
   id: string;
   session_id: string;
   name: string;
-  pinney_number: number;
+  pinney_number: number | null;
   pinney_color: string;
   group_name: string;
   is_locked: boolean;

@@ -58,28 +58,32 @@ const PlayerNameInput: React.FC<{ name: string; onCommit: (name: string) => void
 };
 
 // Inline-editable jersey number. Same commit-on-blur/Enter behavior as the name input.
-// Non-numeric or negative input is rejected and reverts to the current number.
-const PlayerNumberInput: React.FC<{ number: number; onCommit: (num: number) => void }> = ({ number, onCommit }) => {
-  const [value, setValue] = useState(String(number));
-  useEffect(() => { setValue(String(number)); }, [number]);
+// A blank value clears the number (shown as "--"). Non-numeric or negative input
+// is rejected and reverts to the current number.
+const PlayerNumberInput: React.FC<{ number: number | null; onCommit: (num: number | null) => void }> = ({ number, onCommit }) => {
+  const toText = (n: number | null) => (n == null ? '' : String(n));
+  const [value, setValue] = useState(toText(number));
+  useEffect(() => { setValue(toText(number)); }, [number]);
 
   const commit = () => {
-    const parsed = parseInt(value, 10);
-    if (!Number.isFinite(parsed) || parsed < 0) { setValue(String(number)); return; }
+    const trimmed = value.trim();
+    const parsed = trimmed === '' ? null : parseInt(trimmed, 10);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) { setValue(toText(number)); return; }
     if (parsed !== number) onCommit(parsed);
-    else setValue(String(number));
+    else setValue(toText(number));
   };
 
   return (
     <input
       type="number"
       min={0}
+      placeholder="--"
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-        if (e.key === 'Escape') { setValue(String(number)); (e.target as HTMLInputElement).blur(); }
+        if (e.key === 'Escape') { setValue(toText(number)); (e.target as HTMLInputElement).blur(); }
       }}
       className="w-16 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-mono font-bold text-amber-500 dark:text-amber-400 outline-none focus:border-amber-400"
       aria-label="Jersey number"
@@ -172,8 +176,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         const combinedName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : '';
         const name = (row['Name'] || row['name'] || row['Player'] || combinedName || `Player ${idx + 1}`).trim();
         const rawNum = parseInt(row['Number'] || row['number'] || row['Jersey'] || row['#'] || '', 10);
-        const num = Number.isFinite(rawNum) ? rawNum : idx + 1;
+        // A blank/invalid number is stored as null and shown as "--"
         const hasExplicitNumber = Number.isFinite(rawNum);
+        const num = hasExplicitNumber ? rawNum : null;
         const color = getPinneyColor(row['PinneyColor'] || row['Color'] || row['color']).name;
         const group = (row['Group'] || row['group'] || 'Group A').trim();
         const gender = normalizeGender(row['Gender'] || row['gender']);
@@ -235,7 +240,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       id: `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       session_id: currentSession.id,
       name: newPlayerName.trim(),
-      pinney_number: Number(newPlayerNum) || 0,
+      pinney_number: newPlayerNum === '' ? null : Number(newPlayerNum),
       pinney_color: newPlayerColor,
       group_name: newPlayerGroup.trim() || 'Group A',
       is_locked: false,
@@ -622,11 +627,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 />
                 <input
                   type="number"
-                  placeholder="Jersey #"
+                  placeholder="Jersey # (optional)"
                   value={newPlayerNum}
                   onChange={(e) => setNewPlayerNum(e.target.value ? parseInt(e.target.value, 10) : '')}
                   className={inputCls}
-                  required
                 />
                 <select
                   value={newPlayerColor}

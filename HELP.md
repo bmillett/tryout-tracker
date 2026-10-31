@@ -177,14 +177,14 @@ There are four tabs.
 
 #### Roster & Pinneys
 
-**Add one player.** Enter the name, jersey number, pinney color and group (and gender for mixed-gender teams), then tap **Add Player to Roster**.
+**Add one player.** Enter the name, pinney color and group (and gender for mixed-gender teams), then tap **Add Player to Roster**. The jersey number is optional. A player without one shows **--** in place of the number.
 
 **Upload a roster (CSV).** Tap **Select CSV File** and choose a `.csv` file with a header row and these columns:
 
 | Column | Notes |
 |---|---|
 | `Name` | Player name |
-| `Number` | Jersey number |
+| `Number` | Jersey number. Optional. Blank shows as `--` |
 | `PinneyColor` | Optional. Blank or unrecognized becomes N/A |
 | `Group` | Defaults to "Group A" |
 | `Gender` | Mixed-gender teams only. M, Male, Men, Man, Boy, F, Female, Women, Woman, Girl (any case) |
@@ -202,7 +202,7 @@ Maya Singh,22,White,Group B
 **Re-importing updates existing players.** A CSV row whose name matches a player already in the current session (ignoring upper/lower case) updates that player instead of adding a new one. This makes it easy to re-upload a roster after pinney colors change. The match is on name only.
 
 - The pinney color and group are replaced with the values in the file. A blank color becomes N/A and a blank group becomes "Group A", so keep those columns filled in.
-- The number is replaced when the row has one. If the row has no number, the existing number is kept.
+- The number is replaced when the row has one. If the row has no number, the existing number is kept. A new player whose row has no number shows `--`.
 - Gender is updated only when the row has a gender value.
 - Status, lock and all scores and notes are kept.
 - Rows with a name not yet in the session are added as new players.
@@ -212,7 +212,7 @@ When the import finishes, a message shows how many players were added and how ma
 
 **Edit players.** The table lists every player. Change these directly:
 
-- **Number**: click, edit, then press Enter or click away. Press Esc to cancel. Only whole numbers of 0 or more are accepted.
+- **Number**: click, edit, then press Enter or click away. Press Esc to cancel. Only whole numbers of 0 or more are accepted. Clear the field to remove the number (shown as `--`).
 - **Name**: click, edit, then press Enter or click away. Press Esc to cancel.
 - **Pinney Color**: pick from the list.
 - **Group**: type a new group name.
@@ -294,7 +294,7 @@ Information only. All devices using the same team link sync automatically, with 
 
 On the Roster Board, tap **Export CSV Matrix**. The file includes only the players currently shown, so clear the search and set the group filter to **All** to export everyone. Players marked Cut / Moved Down are never included.
 
-Columns: Jersey #, Name, Pinney Color, Group, Status, Locked, Overall / Offense / Defense / Intangibles averages (1 to 5), Total Evals, Evaluators Count, Preset Tags, and Coach Notes (each prefixed with the evaluator's name). Mixed-gender teams also get a Gender column.
+Columns: Jersey # (blank for a player with no number), Name, Pinney Color, Group, Status, Locked, Overall / Offense / Defense / Intangibles averages (1 to 5), Total Evals, Evaluators Count, Preset Tags, and Coach Notes (each prefixed with the evaluator's name). Mixed-gender teams also get a Gender column.
 
 The file is named `<team>_Tryout_<session>_Matrix.csv`.
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Player, Evaluation } from '../types';
-import { getPinneyColor } from '../data/defaultData';
+import { getPinneyColor, jerseyLabel } from '../data/defaultData';
 import { useTeam } from '../context/TeamContext';
 import { GenderBadge, GenderStrip } from './GenderBadge';
 import { CheckCircle2, EyeOff, Bandage, Ban } from 'lucide-react';
@@ -44,7 +44,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <div
           className={`flex items-center justify-center font-black rounded-xl text-lg px-3 py-1 shadow-inner border font-mono ${pinney.bg} ${pinney.text} ${pinney.border}`}
         >
-          #{player.pinney_number}
+          {jerseyLabel(player.pinney_number, '#')}
         </div>
 
         {/* Group Pill or Status */}

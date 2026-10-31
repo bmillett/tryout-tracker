@@ -145,6 +145,11 @@ export const PINNEY_COLORS = [
   { name: 'N/A', hex: '#6b7280', text: 'text-white', border: 'border-gray-400', bg: 'bg-gray-500' },
 ];
 
+// Jersey number for display. A player with no number shows "--". `prefix` is e.g. "#".
+export function jerseyLabel(num: number | null | undefined, prefix = ''): string {
+  return num == null ? '--' : `${prefix}${num}`;
+}
+
 // Pinney color used when none is set.
 export const NO_PINNEY_COLOR = 'N/A';
 

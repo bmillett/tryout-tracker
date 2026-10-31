@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '../types';
-import { getPinneyColor, PRESET_NOTE_TAGS } from '../data/defaultData';
+import { getPinneyColor, jerseyLabel, PRESET_NOTE_TAGS } from '../data/defaultData';
 import { SyncService } from '../services/sync';
 import { useTeam } from '../context/TeamContext';
 import { GenderBadge } from './GenderBadge';
@@ -129,7 +129,7 @@ export const ScoringModal: React.FC<ScoringModalProps> = ({
         <div className="p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black font-mono text-xl border shadow-inner ${pinney.bg} ${pinney.text} ${pinney.border}`}>
-              #{player.pinney_number}
+              {jerseyLabel(player.pinney_number, '#')}
             </div>
             <div>
               <div className="flex items-center gap-2">

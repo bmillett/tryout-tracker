@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Player, Criterion, Evaluation, PlayerNote, TryoutSession } from '../types';
-import { getPinneyColor } from '../data/defaultData';
+import { getPinneyColor, jerseyLabel } from '../data/defaultData';
 import { db } from '../services/db';
 import { SyncService } from '../services/sync';
 import { useTeam } from '../context/TeamContext';
@@ -109,7 +109,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   // Filter & Sort
   const filtered = playerStats.filter(({ player }) => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          player.pinney_number.toString().includes(searchQuery);
+                          (player.pinney_number ?? '').toString().includes(searchQuery);
     const matchesGroup = selectedGroup === 'All' || player.group_name === selectedGroup;
     const matchesStatus =
       selectedStatus === 'all' ||
@@ -127,7 +127,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     if (sortBy === 'offense') return b.offAvg - a.offAvg;
     if (sortBy === 'defense') return b.defAvg - a.defAvg;
     if (sortBy === 'intangibles') return b.intAvg - a.intAvg;
-    if (sortBy === 'number') return a.player.pinney_number - b.player.pinney_number;
+    if (sortBy === 'number') {
+      // Players without a number sort last
+      const an = a.player.pinney_number ?? Infinity;
+      const bn = b.player.pinney_number ?? Infinity;
+      if (an === bn) return 0;
+      return an < bn ? -1 : 1;
+    }
     return 0;
   });
 
@@ -152,7 +158,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       const customComments = notes.filter(n => n.custom_text).map(n => `${n.evaluator_name}: ${n.custom_text}`).join(' | ');
 
       const row: Record<string, string | number> = {
-        'Jersey #': player.pinney_number,
+        'Jersey #': player.pinney_number ?? '',
         'Name': player.name,
         'Pinney Color': getPinneyColor(player.pinney_color).name,
         'Group': player.group_name,
@@ -384,7 +390,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     <td className="p-3.5">
                       <div className="flex items-center gap-2.5">
                         <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-black text-xs border ${pinney.bg} ${pinney.text} ${pinney.border}`}>
-                          {player.pinney_number}
+                          {jerseyLabel(player.pinney_number)}
                         </span>
                         <div>
                           <div className={`font-bold text-sm flex items-center gap-1.5 ${isCut ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
@@ -499,7 +505,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   {mixed_gender && selectedPlayerForDetail.gender && <GenderBadge gender={selectedPlayerForDetail.gender} />}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  #{selectedPlayerForDetail.pinney_number} • {getPinneyColor(selectedPlayerForDetail.pinney_color).name} • {selectedPlayerForDetail.group_name}
+                  {jerseyLabel(selectedPlayerForDetail.pinney_number, '#')} • {getPinneyColor(selectedPlayerForDetail.pinney_color).name} • {selectedPlayerForDetail.group_name}
                 </p>
               </div>
               <button
