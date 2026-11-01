@@ -20,6 +20,7 @@ function getTeamSlug(): string {
 
 export class SyncService {
   private static isSyncing = false;
+  private static retryTimer: ReturnType<typeof setTimeout> | null = null;
   private static isOnline = navigator.onLine;
   private static listeners: ((online: boolean, syncing: boolean, pendingCount: number) => void)[] = [];
   private static unsubscribers: Unsubscribe[] = [];
@@ -384,6 +385,7 @@ export class SyncService {
     this.notify();
 
     let needsRerun = false;
+    let failed = false;
     try {
       const slug = getTeamSlug();
       const teamBase = `teams/${slug}`;
@@ -429,17 +431,37 @@ export class SyncService {
             needsRerun = true;
           }
         } catch (e) {
-          // If network / quota issue, stop loop until next trigger
+          // If network / quota issue, stop loop; the retry below picks it up
+          console.warn('Sync failed for queued item', item.type, item.id, e);
+          failed = true;
           break;
         }
       }
     } catch (e) {
-      // ignore
+      console.warn('Sync queue flush error', e);
+      failed = true;
     } finally {
       this.isSyncing = false;
       this.notify();
     }
     // An item was replaced mid-flight; its own flush call returned early, so send it now
-    if (needsRerun) this.flushQueue();
+    if (needsRerun) {
+      this.flushQueue();
+      return;
+    }
+
+    // Items added while this flush was running were not in `items`, and their own
+    // flush calls returned early because isSyncing was true. Send them now, or retry
+    // later if this pass failed.
+    const remaining = await db.syncQueue.count();
+    if (remaining === 0) return;
+    if (!failed) {
+      this.flushQueue();
+    } else if (!this.retryTimer) {
+      this.retryTimer = setTimeout(() => {
+        this.retryTimer = null;
+        this.flushQueue();
+      }, 15000);
+    }
   }
 }
