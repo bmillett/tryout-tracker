@@ -11,7 +11,8 @@ import {
   Unlock,
   Download,
   Search,
-  ArrowUpDown
+  ArrowUpDown,
+  X
 } from 'lucide-react';
 
 interface LeaderboardProps {
@@ -285,8 +286,18 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               placeholder="Search by name or jersey #..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 outline-none focus:border-amber-400"
+              className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-9 py-2.5 outline-none focus:border-amber-400"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-90 transition"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Group Filter + Status Filter */}

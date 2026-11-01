@@ -24,7 +24,8 @@ import {
   Lock,
   Sun,
   Moon,
-  HelpCircle
+  HelpCircle,
+  X
 } from 'lucide-react';
 
 // Loaded on demand so the markdown renderer isn't in the main bundle.
@@ -297,8 +298,18 @@ export const App: React.FC = () => {
                   placeholder="Quick find by name or jersey #..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
+                  className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-10 py-2.5 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-90 transition"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               {/* Drill Group Filter Pills */}
