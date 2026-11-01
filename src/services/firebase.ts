@@ -77,6 +77,9 @@ export function getFirestoreDB(): Firestore | null {
     try {
       // Initialize Firestore with robust multi-tab persistent offline cache
       firestoreInstance = initializeFirestore(appInstance, {
+        // Optional fields (e.g. a note's preset_tag or custom_text) are often undefined;
+        // without this, setDoc throws and blocks the whole sync queue.
+        ignoreUndefinedProperties: true,
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         })
