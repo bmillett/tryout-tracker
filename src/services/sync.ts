@@ -374,6 +374,20 @@ export class SyncService {
     this.flushQueue();
   }
 
+  // Make `targetId` the one session evaluators see. The new flag is written first so
+  // there is never a moment with no flagged session; then any other flag is cleared.
+  public static async setEvaluatorSession(targetId: string) {
+    const all = await db.sessions.toArray();
+    const target = all.find(s => s.id === targetId);
+    if (!target) return;
+    await this.syncSession({ ...target, is_evaluator_session: true });
+    for (const s of all) {
+      if (s.id !== targetId && s.is_evaluator_session) {
+        await this.syncSession({ ...s, is_evaluator_session: false });
+      }
+    }
+  }
+
   // Flush offline queue to Firebase Firestore
   public static async flushQueue() {
     if (this.isSyncing || !this.isOnline) return;

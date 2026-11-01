@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './services/db';
 import { SyncService } from './services/sync';
+import { getEvaluatorSession } from './services/sessions';
 import type { TryoutSession, Player } from './types';
 
 import { SyncStatusBadge } from './components/SyncStatusBadge';
@@ -42,7 +43,9 @@ export const App: React.FC = () => {
     return localStorage.getItem(`${team.slug}_evaluator_name`) || '';
   });
 
-  const [activeSession, setActiveSession] = useState<TryoutSession | null>(null);
+  // Evaluators always follow the session the coach flagged for them. A coach who picks a
+  // different session in Settings only changes what this device shows (manualSessionId).
+  const [manualSessionId, setManualSessionId] = useState<string | null>(null);
   const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(() => {
     return sessionStorage.getItem(`${team.slug}_admin_unlocked`) === 'true';
   });
@@ -77,6 +80,9 @@ export const App: React.FC = () => {
 
   // Live queries from IndexedDB
   const sessions = useLiveQuery(() => db.sessions.toArray(), []) || [];
+  const evaluatorSession = getEvaluatorSession(sessions);
+  const activeSession: TryoutSession | null =
+    sessions.find(s => s.id === manualSessionId) || evaluatorSession || null;
   const players = useLiveQuery(
     () => (activeSession ? db.players.where('session_id').equals(activeSession.id).toArray() : []),
     [activeSession?.id]
@@ -99,23 +105,19 @@ export const App: React.FC = () => {
     SyncService.initDB();
   }, []);
 
+  // When the session changes (e.g. a coach moves evaluators to the next session), drop
+  // the open scoring sheet and group filter so a player from the old session is never
+  // scored against the new one.
   useEffect(() => {
-    if (sessions.length === 0) return;
-    if (!activeSession) {
-      // First load: pick the active session (or first)
-      setActiveSession(sessions.find(s => s.status === 'active') || sessions[0]);
-    } else {
-      // Already have a session — keep it in sync if Firestore updated it
-      const refreshed = sessions.find(s => s.id === activeSession.id);
-      if (refreshed && (
-        refreshed.target_roster_size !== activeSession.target_roster_size ||
-        refreshed.status !== activeSession.status ||
-        refreshed.name !== activeSession.name
-      )) {
-        setActiveSession(refreshed);
-      }
-    }
-  }, [sessions]);
+    setSelectedPlayer(null);
+    setSelectedGroupFilter('All');
+  }, [activeSession?.id]);
+
+  // Choosing the evaluator session goes back to following it; any other choice is a
+  // private view on this device.
+  const handleSessionChange = (s: TryoutSession) => {
+    setManualSessionId(s.id === evaluatorSession?.id ? null : s.id);
+  };
 
   const handleAdminClick = () => {
     if (isAdminUnlocked) {
@@ -419,7 +421,7 @@ export const App: React.FC = () => {
             criteria={criteria}
             evaluations={evaluations}
             notes={notes}
-            onSessionChange={(s) => setActiveSession(s)}
+            onSessionChange={handleSessionChange}
             onRefresh={() => {}}
           />
         )}
@@ -438,7 +440,7 @@ export const App: React.FC = () => {
             sessions={sessions}
             players={players}
             criteria={criteria}
-            onSessionChange={(s) => setActiveSession(s)}
+            onSessionChange={handleSessionChange}
             onRefresh={() => {}}
           />
         )}

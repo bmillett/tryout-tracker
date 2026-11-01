@@ -5,6 +5,7 @@ import { db } from '../services/db';
 import { SyncService } from '../services/sync';
 import type { Player, Criterion, TryoutSession, PlayerStatus } from '../types';
 import { PINNEY_COLORS, NO_PINNEY_COLOR, getPinneyColor, DEFAULT_CRITERIA_TEMPLATES } from '../data/defaultData';
+import { getEvaluatorSession, getFlaggedEvaluatorSession } from '../services/sessions';
 import { useTeam } from '../context/TeamContext';
 import { cacheTeam } from '../services/team';
 import { normalizeGender } from './GenderBadge';
@@ -112,6 +113,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   
   const team = useTeam();
   const { mixed_gender } = team;
+
+  // The session evaluators see (shared by all devices). `currentSession` is only what
+  // this coach is looking at.
+  const evaluatorSession = getEvaluatorSession(sessions);
+  const isEvaluatorSession = evaluatorSession?.id === currentSession.id;
 
   // New Player Form State
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -350,10 +356,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onRefresh();
   };
 
+  // Point all evaluators at the session this coach is viewing. Never freezes anything
+  // without asking.
+  const handleSetEvaluatorSession = async () => {
+    const previous = evaluatorSession;
+    if (!confirm(`Move all evaluators to "${currentSession.name}"? Evaluators on other devices will switch to it right away.`)) return;
+    await SyncService.setEvaluatorSession(currentSession.id);
+
+    if (previous && previous.id !== currentSession.id && previous.status === 'active') {
+      if (confirm(`"${previous.name}" is still live. Freeze it too so no one can change its scores?`)) {
+        const fresh = await db.sessions.get(previous.id);
+        if (fresh) await SyncService.syncSession({ ...fresh, status: 'finalized' });
+      }
+    }
+    onRefresh();
+    setSaveSuccess(`Evaluators now see ${currentSession.name}.`);
+    setTimeout(() => setSaveSuccess(''), 3000);
+  };
+
   // Create New Session & Rollover Roster
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSessionName.trim()) return;
+
+    // Pin evaluators to their current session before adding another, so creating a
+    // session never changes what they see. A coach moves them later on purpose.
+    if (evaluatorSession && !getFlaggedEvaluatorSession(sessions)) {
+      await SyncService.setEvaluatorSession(evaluatorSession.id);
+    }
 
     const newSessionId = `session-${Date.now()}`;
     const newSession: TryoutSession = {
@@ -399,7 +429,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setNewSessionName('');
     onSessionChange(newSession);
     onRefresh();
-    setSaveSuccess(`Created ${newSession.name} and carried over ${rolledPlayers.length} players!`);
+    setSaveSuccess(`Created ${newSession.name} and carried over ${rolledPlayers.length} players! Evaluators still see ${evaluatorSession?.name ?? 'the previous session'}. Use "Send evaluators here" when you are ready to move them.`);
     setTimeout(() => setSaveSuccess(''), 4000);
   };
 
@@ -488,6 +518,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-1">{currentSession.name}</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">Target Roster: {targetRoster} players • {lockedCount} locked onto team</p>
+          {isEvaluatorSession ? (
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mt-1">Evaluators are scoring this session.</p>
+          ) : (
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mt-1">
+              Evaluators are on {evaluatorSession?.name ?? 'another session'}, not this one. Changes you make here are not visible to them.
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -505,10 +542,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           >
             {sessions.map(s => (
               <option key={s.id} value={s.id}>
-                {s.name} ({s.status})
+                {s.name} ({s.status}){s.id === evaluatorSession?.id ? ' - evaluators' : ''}
               </option>
             ))}
           </select>
+
+          {/* Move evaluators to the session being viewed */}
+          {!isEvaluatorSession && (
+            <button
+              onClick={handleSetEvaluatorSession}
+              className="px-3 py-2 text-xs font-semibold rounded-xl border bg-amber-400 hover:bg-amber-300 text-slate-950 border-amber-500 transition"
+            >
+              Send evaluators here
+            </button>
+          )}
 
           {/* Freeze / Re-Open Button */}
           <button

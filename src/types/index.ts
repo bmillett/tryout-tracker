@@ -19,6 +19,8 @@ export interface TryoutSession {
   target_roster_size: number;
   date: string;
   status: SessionStatus;
+  /** True on the one session that evaluators see. Set by a coach in Settings. */
+  is_evaluator_session?: boolean;
   /** @deprecated PIN is now on the team doc (team.coach_pin). Field kept optional so old records still type-check. */
   admin_pin_hash?: string;
   created_at?: string;

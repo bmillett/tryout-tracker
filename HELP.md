@@ -173,6 +173,8 @@ Scores are on a 1 to 5 scale (-- = 1, Std = 3, ++ = 5). Players marked Cut / Mov
 
 Tap **Settings** to open the admin screen. At the top you see the current session, its status (**Live** or **Frozen**), the target roster size and how many players are locked. You can switch session from the drop-down, or use **Freeze Evaluator Inputs** / **Re-Open Inputs** (the same toggle as on the Roster Board).
 
+**Which session evaluators see.** Evaluators always see one session, the one a coach chose for them. The drop-down marks it with "- evaluators", and the banner under the session name says whether evaluators are on the session you are viewing. Picking another session in the drop-down only changes what *you* see on your own device, so you can prepare the next session (mark players absent, edit the roster) without evaluators noticing. When you are viewing a session evaluators are not on, tap **Send evaluators here** to move them. Evaluators switch right away, and any scoring sheet they had open closes. You are asked whether to also freeze the session they were on. That is never done automatically.
+
 There are four tabs.
 
 #### Roster & Pinneys
@@ -256,7 +258,9 @@ Use this to move from one tryout day to the next (Session 1 → Session 2 → Se
 4. Tick **Only carry over Locked players** if you want just the locked players. Leave it unticked to carry over everyone who isn't Cut / Moved Down.
 5. Tap **Create Session & Carry Over Roster**.
 
-The new session starts with the source session's criteria (including exemplars) and players. Players come across as **Active**, except those marked *No Need to Watch*. Scores and notes start fresh. The new session uses the same target roster size, and the app switches to it. Earlier sessions stay available in the session drop-down.
+The new session starts with the source session's criteria (including exemplars) and players. Players come across as **Active**, except those marked *No Need to Watch*. Scores and notes start fresh. The new session uses the same target roster size, and your screen switches to it. Earlier sessions stay available in the session drop-down.
+
+Creating a session does **not** move evaluators. They stay on the session they were on until you tap **Send evaluators here** while viewing the new one. More than one session can be Live at the same time. Deleting a session isn't supported yet.
 
 #### Cloud & Security (Settings)
 
@@ -289,7 +293,7 @@ Information only. All devices using the same team link sync automatically, with 
 1. **Before tryouts:** set the coach PIN, target roster size and criteria. Upload the roster by CSV. Give each evaluator the team link.
 2. **During tryouts:** evaluators score players and add notes from their phones. Coaches watch the Roster Board fill in.
 3. **After each session:** lock the players you want to keep, mark cuts as *Cut / Moved Down*, then **Freeze Evaluator Inputs**.
-4. **Next session:** use **Multi-Session Rollover** to create the next session with the right players.
+4. **Next session:** use **Multi-Session Rollover** to create the next session with the right players. When you are ready, tap **Send evaluators here** to move evaluators to it.
 5. **At the end:** export the CSV matrix for your records and finalize the session.
 
 ### Exporting results
