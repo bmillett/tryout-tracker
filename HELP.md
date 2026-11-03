@@ -209,10 +209,12 @@ Maya Singh,22,White,Group B
 - A new player whose row has no number shows `--`.
 - Gender is updated only when the row has a gender value.
 - Status, lock and all scores and notes are kept.
-- Rows with a name not yet in the session are added as new players.
+- Rows with a name not yet in the session are added as new players, unless **Only update existing players** is ticked (see below).
 - If two players share a name, they are treated as one. Give them distinct names (for example, add an initial) before importing.
 
-When the import finishes, a message shows how many players were added and how many were updated.
+**Only update existing players.** Tick the box above **Select CSV File** to import without adding anyone. Rows that match a player in the session update that player as usual, and rows whose name isn't in the session are skipped. Use it to apply colors or numbers from a file that may contain extra or misspelled names. The box is unticked each time you open Settings.
+
+When the import finishes, a message shows how many players were added, updated and (with the box ticked) skipped because they weren't found.
 
 **Edit players.** The table lists every player. Change these directly:
 

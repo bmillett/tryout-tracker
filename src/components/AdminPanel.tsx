@@ -145,6 +145,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [includeLocksOnly, setIncludeLocksOnly] = useState(false);
 
   const [saveSuccess, setSaveSuccess] = useState('');
+  const [csvUpdateOnly, setCsvUpdateOnly] = useState(false);
 
   // Evaluator list (derived from evaluations in the current session)
   const sessionEvaluators = useLiveQuery(async () => {
@@ -165,6 +166,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Clear the input so choosing the same file again (e.g. after toggling the option) still fires
+    e.target.value = '';
 
     Papa.parse(file, {
       header: true,
@@ -178,7 +181,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       // Load existing players for this session to dedup
       const existing = await db.players.where('session_id').equals(currentSession.id).toArray();
 
-      let added = 0, updated = 0;
+      let added = 0, updated = 0, skipped = 0;
       for (const [idx, row] of rows.entries()) {
         const firstName = row['firstname'] || '';
         const lastName = row['lastname'] || '';
@@ -213,6 +216,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           // Keep existing[] in sync so later rows in the same file don't re-match stale data
           existing.splice(existing.indexOf(match), 1, updatedPlayer);
           updated++;
+        } else if (csvUpdateOnly) {
+          skipped++;
         } else {
           const player: Player = {
             id: `player_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
@@ -232,11 +237,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
       }
 
-      if (added > 0 || updated > 0) {
+      if (added > 0 || updated > 0 || skipped > 0) {
         onRefresh();
         const parts = [];
         if (added > 0) parts.push(`${added} added`);
         if (updated > 0) parts.push(`${updated} updated`);
+        if (skipped > 0) parts.push(`${skipped} not found, skipped`);
         setSaveSuccess(`CSV import: ${parts.join(', ')}.`);
         setTimeout(() => setSaveSuccess(''), 3000);
       }
@@ -657,6 +663,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {mixed_gender && <span className="block mt-0.5 text-slate-400 dark:text-slate-500">Gender accepts: M / Male / Men / Man (and F equivalents), case-insensitive.</span>}
                 </p>
               </div>
+              <label className="flex items-center gap-2 mb-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={csvUpdateOnly}
+                  onChange={(e) => setCsvUpdateOnly(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-slate-600"
+                />
+                <span>Only update existing players (don't add new ones)</span>
+              </label>
               <label className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer transition">
                 <Upload className="w-3.5 h-3.5" />
                 <span>Select CSV File</span>
