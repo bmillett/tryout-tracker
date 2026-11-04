@@ -201,7 +201,7 @@ Kian Miller,7,Blue,Group A
 Maya Singh,22,White,Group B
 ```
 
-**Re-importing updates existing players.** A CSV row whose name matches a player already in the current session (ignoring upper/lower case) updates that player instead of adding a new one. This makes it easy to re-upload a roster after pinney colors change. The match is on name only.
+**Re-importing updates existing players.** A CSV row whose name matches a player already in the current session updates that player instead of adding a new one. This makes it easy to re-upload a roster after pinney colors change. The match is on name only. Upper/lower case and extra spaces (at the start, the end, or doubled between words) are ignored, so `kian  miller ` matches `Kian Miller`. Names the import adds are saved with those extra spaces removed.
 
 - Each of number, pinney color and group is replaced only when the row has a value for it. A blank cell (or a missing column) keeps the player's current value. This lets you import colors first and the numbers later, or the reverse, without wiping the other.
 - Color names are not case-sensitive, and spaces around the `/` are optional. `Yellow` or `Gold` is read as Yellow / Gold, `Blue`, `Navy`, `Blue/Navy` or the older `Navy / Blue` as Blue / Navy, and `Pink` or `Purple` as Pink / Purple.

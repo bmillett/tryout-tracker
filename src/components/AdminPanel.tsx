@@ -28,6 +28,9 @@ import {
   UserX
 } from 'lucide-react';
 
+// Name comparison key for CSV import: lowercase, trimmed, runs of whitespace collapsed to one space.
+const normalizeNameKey = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+
 // Inline-editable player name. Edits stay local until blur / Enter, so a rename
 // is one Firestore write instead of one per keystroke. Empty names are rejected.
 const PlayerNameInput: React.FC<{ name: string; onCommit: (name: string) => void }> = ({ name, onCommit }) => {
@@ -186,7 +189,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         const firstName = row['firstname'] || '';
         const lastName = row['lastname'] || '';
         const combinedName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : '';
-        const name = (row['name'] || row['player'] || combinedName || `Player ${idx + 1}`).trim();
+        const name = (row['name'] || row['player'] || combinedName || `Player ${idx + 1}`).replace(/\s+/g, ' ').trim();
         const rawNum = parseInt(row['number'] || row['jersey'] || row['#'] || '', 10);
         // A blank/invalid number is stored as null and shown as "--"
         const hasExplicitNumber = Number.isFinite(rawNum);
@@ -199,9 +202,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         const group = rawGroup || 'Group A';
         const gender = normalizeGender(row['gender']);
 
-        // Match by name (case-insensitive) only, so re-importing with new colors/numbers updates in place
-        const nameLower = name.toLowerCase();
-        const match = existing.find(p => p.name.toLowerCase() === nameLower);
+        // Match by name only, so re-importing with new colors/numbers updates in place.
+        // Case, leading/trailing spaces and repeated inner spaces are ignored on both sides,
+        // because older imports may have left stray spaces in stored names.
+        const nameKey = normalizeNameKey(name);
+        const match = existing.find(p => normalizeNameKey(p.name) === nameKey);
 
         if (match) {
           // Upsert: update mutable fields, preserve status/is_locked/id
